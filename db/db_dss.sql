@@ -1,8 +1,3 @@
--- ========================================================
--- DATABASE: db_dss (versi final perbaikan 2025-11-07)
--- Dengan trigger otomatis hapus evaluasi + auto_increment fix
--- ========================================================
-
 DROP DATABASE IF EXISTS db_dss;
 CREATE DATABASE db_dss;
 USE db_dss;
@@ -43,28 +38,33 @@ INSERT INTO `saw_criterias` (`id_criteria`, `criteria`, `weight`, `attribute`) V
 -- TABLE: saw_evaluations
 -- ===========================
 CREATE TABLE `saw_evaluations` (
+  `id_eval` INT NOT NULL AUTO_INCREMENT,
   `id_alternative` SMALLINT(5) UNSIGNED NOT NULL,
   `id_criteria` TINYINT(3) UNSIGNED NOT NULL,
   `value` FLOAT NOT NULL CHECK (`value` >= 0 AND `value` <= 5),
-  PRIMARY KEY (`id_alternative`, `id_criteria`)
+  `period` CHAR(7) NOT NULL COMMENT 'Format: YYYY-MM',
+  PRIMARY KEY (`id_eval`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-INSERT INTO `saw_evaluations` (`id_alternative`, `id_criteria`, `value`) VALUES
-(1, 1, 5),
-(1, 2, 1),
-(1, 3, 3),
-(1, 4, 5),
-(1, 5, 3),
-(2, 1, 1),
-(2, 2, 2),
-(2, 3, 4),
-(2, 4, 1),
-(2, 5, 2),
-(3, 1, 3),
-(3, 2, 4),
-(3, 3, 2),
-(3, 4, 3),
-(3, 5, 5);
+-- Contoh data periode Januari 2025
+INSERT INTO `saw_evaluations` (`id_alternative`, `id_criteria`, `value`, `period`) VALUES
+(1, 1, 5, '2025-01'),
+(1, 2, 1, '2025-01'),
+(1, 3, 3, '2025-01'),
+(1, 4, 5, '2025-01'),
+(1, 5, 3, '2025-01'),
+
+(2, 1, 1, '2025-01'),
+(2, 2, 2, '2025-01'),
+(2, 3, 4, '2025-01'),
+(2, 4, 1, '2025-01'),
+(2, 5, 2, '2025-01'),
+
+(3, 1, 3, '2025-01'),
+(3, 2, 4, '2025-01'),
+(3, 3, 2, '2025-01'),
+(3, 4, 3, '2025-01'),
+(3, 5, 5, '2025-01');
 
 -- ===========================
 -- TABLE: saw_users
@@ -81,10 +81,9 @@ INSERT INTO `saw_users` (`id_user`, `username`, `password`, `role`) VALUES
 (1, 'admin', '21232f297a57a5a743894a0e4a801fc3', 'admin'),
 (2, 'alternatif', '827ccb0eea8a706c4c34a16891f84e7b', 'alternatif');
 
--- ======================================================
--- TRIGGER: otomatis hapus data evaluasi jika alternatif dihapus
--- ======================================================
-
+-- ===========================
+-- TRIGGER: hapus evaluasi jika alternatif dihapus
+-- ===========================
 DELIMITER $$
 
 CREATE TRIGGER `hapus_evaluasi_otomatis`
@@ -96,12 +95,3 @@ END $$
 
 DELIMITER ;
 
--- ===========================
--- AUTO_INCREMENT SYNC
--- ===========================
-ALTER TABLE `saw_alternatives` AUTO_INCREMENT = 4;
-ALTER TABLE `saw_users` AUTO_INCREMENT = 3;
-
--- ===========================
--- END OF FILE
--- ===========================

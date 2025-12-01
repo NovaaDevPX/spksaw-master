@@ -3,17 +3,20 @@
 <?php
 require "layout/head.php";
 require "preferensi-fungsi.php";
+require "include/conn.php";
+
+// ambil daftar period
+$periodList = getPeriodList($db);
+
+// tentukan period aktif
+$period = isset($_GET['period']) ? $_GET['period'] : (count($periodList) ? $periodList[0] : null);
+
 ?>
 
 <body>
   <div id="app">
     <?php require "layout/sidebar.php"; ?>
     <div id="main">
-      <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-          <i class="bi bi-justify fs-3"></i>
-        </a>
-      </header>
 
       <div class="page-heading">
         <h3>Hasil Perangkingan</h3>
@@ -21,10 +24,23 @@ require "preferensi-fungsi.php";
 
       <div class="page-content">
         <section class="row">
+
           <div class="col-12">
+
+            <form method="GET" class="mb-3">
+              <label>Pilih Periode:</label>
+              <select name="period" class="form-select" onchange="this.form.submit()">
+                <?php foreach ($periodList as $p): ?>
+                  <option value="<?= $p ?>" <?= $p == $period ? 'selected' : '' ?>>
+                    <?= $p ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </form>
+
             <div class="card">
               <div class="card-header">
-                <h4 class="card-title">Ranking Berdasarkan Nilai Akhir (P)</h4>
+                <h4 class="card-title">Ranking Periode <?= $period ?></h4>
               </div>
 
               <div class="card-body">
@@ -39,30 +55,21 @@ require "preferensi-fungsi.php";
                     </thead>
                     <tbody>
                       <?php
-                      list($values, $alternatif) = getEvaluasi($db);
+                      list($values, $alternatif) = getEvaluasi($db, $period);
                       list($krit, $bobot) = getKriteria($db);
 
                       if (empty($values)) {
-                        echo "<tr><td colspan='3' class='text-danger text-center'>Belum ada data evaluasi.</td></tr>";
+                        echo "<tr><td colspan='3' class='text-danger text-center'>Belum ada data periode ini.</td></tr>";
                       } else {
                         $R = hitungNormalisasi($values, $krit, $bobot);
                         $P = hitungNilaiAkhir($R);
                         $ranking = perangkingan($P, $alternatif);
-                        $duaKoma = [];
-                        foreach ($ranking as $r) {
-                          $duaKoma[] = number_format($r['nilai'], 2);
-                        }
-                        $count = array_count_values($duaKoma);
 
                         foreach ($ranking as $row) {
-                          $formatted = $count[number_format($row['nilai'], 2)] > 1
-                            ? number_format($row['nilai'], 3)
-                            : number_format($row['nilai'], 2);
-
                           echo "<tr>
                                   <td>{$row['ranking']}</td>
-                                  <td>{$row['alt_label']} {$row['name']}</td>
-                                  <td>{$formatted}</td>
+                                  <td>{$row['name']}</td>
+                                  <td>{$row['nilai']}</td>
                                 </tr>";
                         }
                       }
@@ -73,11 +80,12 @@ require "preferensi-fungsi.php";
               </div>
 
             </div>
+
           </div>
+
         </section>
       </div>
 
-      <?php require "layout/footer.php"; ?>
     </div>
   </div>
 
