@@ -28,13 +28,24 @@ function getEvaluasi($db, $period)
   $values = [];
   $alts = [];
 
-  $q = $db->query("
-    SELECT a.id_alternative, b.name, a.id_criteria, a.value
-    FROM saw_evaluations a
-    JOIN saw_alternatives b ON b.id_alternative = a.id_alternative
-    WHERE a.period = '$period'
-    ORDER BY a.id_alternative, a.id_criteria
-  ");
+  // Jika ALL → ambil semua data
+  if ($period === "all") {
+    $q = $db->query("
+      SELECT a.id_alternative, b.name, a.id_criteria, a.value
+      FROM saw_evaluations a
+      JOIN saw_alternatives b ON b.id_alternative = a.id_alternative
+      ORDER BY a.id_alternative, a.id_criteria
+    ");
+  } else {
+    // Mode periode tertentu
+    $q = $db->query("
+      SELECT a.id_alternative, b.name, a.id_criteria, a.value
+      FROM saw_evaluations a
+      JOIN saw_alternatives b ON b.id_alternative = a.id_alternative
+      WHERE a.period = '$period'
+      ORDER BY a.id_alternative, a.id_criteria
+    ");
+  }
 
   while ($r = $q->fetch_object()) {
     $alts[$r->id_alternative] = $r->name;
