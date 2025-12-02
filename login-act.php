@@ -33,15 +33,22 @@ if ($result && $result->num_rows === 1) {
     $_SESSION['status'] = "login";
 
     // Arahkan berdasarkan role
-    if ($data['role'] === 'admin') {
-      header("Location: index.php");
-      exit;
-    } elseif ($data['role'] === 'alternatif') {
-      header("Location: alternatif/index.php");
-      exit;
-    } else {
-      header("Location: login.php?error=role_not_found");
-      exit;
+    switch ($data['role']) {
+      case 'admin':
+        header("Location: index.php");
+        exit;
+      case 'mitra':
+        header("Location: index.php");
+        exit;
+      case 'master':
+        header("Location: index.php");
+        exit;
+      case 'manager':
+        header("Location: index.php");
+        exit;
+      default:
+        header("Location: login.php?error=role_not_found");
+        exit;
     }
   } else {
     // Password salah
