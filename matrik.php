@@ -237,41 +237,52 @@ require "include/nama-bulan.php";
 
                     <hr>
 
+                    <?php
+                    // Ambil kriteria
+                    $krit = [];
+                    $bobot = [];
+
+                    $q = $db->query("SELECT id_criteria, attribute, weight FROM saw_criterias ORDER BY id_criteria");
+                    while ($r = $q->fetch_object()) {
+                      $krit[$r->id_criteria] = $r->attribute;
+                      $bobot[$r->id_criteria] = $r->weight;
+                    }
+
+                    $jmlKrit = count($krit); // jumlah kriteria
+                    ?>
+
                     <!-- ============================== -->
-                    <!--           MATRIX KEPUTUSAN     -->
+                    <!--       MATRIX KEPUTUSAN (X)     -->
                     <!-- ============================== -->
 
                     <table class="table table-striped mb-0">
                       <caption>Matrik Keputusan (X)</caption>
 
                       <tr>
-                        <th rowspan='2'>Alternatif</th>
-                        <th colspan='6'>Kriteria</th>
+                        <th rowspan="2">Alternatif</th>
+                        <th colspan="<?= $jmlKrit ?>">Kriteria</th>
+                        <th>Aksi</th>
                       </tr>
                       <tr>
-                        <th>C1</th>
-                        <th>C2</th>
-                        <th>C3</th>
-                        <th>C4</th>
-                        <th colspan="2">C5</th>
+                        <?php foreach ($krit as $idC => $v): ?>
+                          <th>C<?= $idC ?></th>
+                        <?php endforeach; ?>
+                        <th></th>
                       </tr>
 
                       <?php
                       $sql = "
-    SELECT 
-        b.id_alternative, b.name,
-        SUM(IF(a.id_criteria=1,a.value,NULL)) AS C1,
-        SUM(IF(a.id_criteria=2,a.value,NULL)) AS C2,
-        SUM(IF(a.id_criteria=3,a.value,NULL)) AS C3,
-        SUM(IF(a.id_criteria=4,a.value,NULL)) AS C4,
-        SUM(IF(a.id_criteria=5,a.value,NULL)) AS C5
-    FROM saw_alternatives b
-    LEFT JOIN saw_evaluations a 
-      ON a.id_alternative = b.id_alternative
-     AND a.period = '{$periodEsc}'
-    GROUP BY b.id_alternative
-    ORDER BY b.id_alternative
-  ";
+SELECT 
+    b.id_alternative, b.name,
+    GROUP_CONCAT(a.id_criteria ORDER BY a.id_criteria) AS ids,
+    GROUP_CONCAT(a.value ORDER BY a.id_criteria) AS vals
+FROM saw_alternatives b
+LEFT JOIN saw_evaluations a 
+  ON a.id_alternative = b.id_alternative
+ AND a.period = '{$periodEsc}'
+GROUP BY b.id_alternative
+ORDER BY b.id_alternative
+";
 
                       $result = $db->query($sql);
 
@@ -280,46 +291,46 @@ require "include/nama-bulan.php";
                       $X = [];
                       $no = 1;
 
-                      if ($result && $result->num_rows > 0) {
-                        while ($row = $result->fetch_object()) {
+                      while ($row = $result->fetch_object()) {
 
-                          $alternatifNama[$row->id_alternative] = $row->name;
-                          $idMapping[$row->id_alternative] = $no;
+                        $alternatifNama[$row->id_alternative] = $row->name;
+                        $idMapping[$row->id_alternative] = $no;
 
-                          $X[$row->id_alternative] = [
-                            $row->C1,
-                            $row->C2,
-                            $row->C3,
-                            $row->C4,
-                            $row->C5
-                          ];
+                        // Isi nilai Xij berdasarkan jumlah kriteria
+                        $vals = array_fill(1, $jmlKrit, NULL);
 
-                          // ====== URL Aman untuk hapus ======
-                          $altId = (int)$row->id_alternative;
-                          $delUrl = 'keputusan-hapus.php?id=' . $altId . '&period=' . urlencode($period);
+                        if ($row->ids) {
+                          $idArr  = explode(",", $row->ids);
+                          $valArr = explode(",", $row->vals);
 
-                          echo "<tr class='center'>
-        <th>A{$no} " . htmlspecialchars($row->name) . "</th>";
-
-                          for ($i = 1; $i <= 5; $i++) {
-                            $v = $row->{"C$i"};
-                            echo "<td>" . ($v === NULL ? "<span class='text-danger'>-</span>" : round($v, 2)) . "</td>";
+                          foreach ($idArr as $idx => $idC) {
+                            $vals[$idC] = $valArr[$idx];
                           }
-
-                          echo "
-        <td>
-          <a href='" . htmlspecialchars($delUrl) . "'
-             class='btn btn-danger btn-sm'
-             onclick=\"return confirm('Hapus semua evaluasi untuk " . addslashes(htmlspecialchars($row->name)) . " pada periode " . htmlspecialchars($period) . " ?');\">
-            Hapus
-          </a>
-        </td>
-      ";
-
-                          echo "</tr>";
-
-                          $no++;
                         }
+
+                        // Simpan ke matriks X
+                        $X[$row->id_alternative] = $vals;
+
+                        echo "<tr class='center'>";
+                        echo "<th>A{$no} {$row->name}</th>";
+
+                        foreach ($vals as $v) {
+                          echo "<td>" . ($v === NULL ? "-" : round($v, 2)) . "</td>";
+                        }
+
+                        $delUrl = "keputusan-hapus.php?id={$row->id_alternative}&period=" . urlencode($period);
+
+                        echo "
+        <td>
+            <a href='$delUrl' class='btn btn-danger btn-sm' 
+                onclick=\"return confirm('Hapus semua evaluasi untuk {$row->name}?');\">
+                Hapus
+            </a>
+        </td>
+    ";
+
+                        echo "</tr>";
+                        $no++;
                       }
                       ?>
                     </table>
@@ -333,51 +344,46 @@ require "include/nama-bulan.php";
                       <caption>Matrik Ternormalisasi (R)</caption>
 
                       <tr>
-                        <th rowspan='2'>Alternatif</th>
-                        <th colspan='5'>Kriteria</th>
+                        <th rowspan="2">Alternatif</th>
+                        <th colspan="<?= $jmlKrit ?>">Kriteria</th>
                       </tr>
                       <tr>
-                        <th>C1</th>
-                        <th>C2</th>
-                        <th>C3</th>
-                        <th>C4</th>
-                        <th>C5</th>
+                        <?php foreach ($krit as $idC => $v): ?>
+                          <th>C<?= $idC ?></th>
+                        <?php endforeach; ?>
                       </tr>
 
-
                       <?php
-                      $krit = [];
-                      $bobot = [];
-                      $q = $db->query("SELECT id_criteria, attribute, weight FROM saw_criterias ORDER BY id_criteria");
-                      while ($r = $q->fetch_object()) {
-                        $krit[$r->id_criteria] = $r->attribute;
-                        $bobot[$r->id_criteria] = $r->weight;
-                      }
-
                       $R = [];
 
-                      foreach ($X as $idAlt => $rowVal) {
+                      foreach ($X as $idAlt => $vals) {
                         echo "<tr class='center'>";
                         echo "<th>A{$idMapping[$idAlt]} {$alternatifNama[$idAlt]}</th>";
 
                         $rRow = [];
 
-                        for ($j = 1; $j <= 5; $j++) {
-                          $xij = $rowVal[$j - 1];
+                        foreach ($vals as $idC => $xij) {
 
                           if ($xij === NULL) {
-                            $rRow[$j] = "-";
+                            $rRow[$idC] = "-";
                           } else {
-                            $wj = $bobot[$j] / 100;
 
-                            $r = ($krit[$j] === "cost")
-                              ? (1 - ($xij / 5)) * $wj
-                              : ($xij / 5) * $wj;
+                            // Bobot %
+                            $wj = $bobot[$idC] / 100;
 
-                            $rRow[$j] = number_format($r, 3);
+                            // Rumus lama versi kakak namun dibagi jumlah kriteria
+                            $denom = $jmlKrit;
+
+                            if ($krit[$idC] === "cost") {
+                              $r = (1 - ($xij / $denom)) * $wj;
+                            } else {
+                              $r = ($xij / $denom) * $wj;
+                            }
+
+                            $rRow[$idC] = number_format($r, 3);
                           }
 
-                          echo "<td>{$rRow[$j]}</td>";
+                          echo "<td>{$rRow[$idC]}</td>";
                         }
 
                         $R[$idAlt] = $rRow;
@@ -401,26 +407,25 @@ require "include/nama-bulan.php";
                       </tr>
 
                       <?php
-                      if (!empty($R)) {
-                        $nilaiP = [];
+                      $nilaiP = [];
 
-                        foreach ($R as $id => $arr) {
-                          $t = 0;
-                          foreach ($arr as $v) {
-                            if ($v !== "-") $t += (float)$v;
-                          }
-                          $nilaiP[$id] = $t;
+                      foreach ($R as $idAlt => $vals) {
+                        $t = 0;
+                        foreach ($vals as $v) {
+                          if ($v !== "-") $t += (float)$v;
                         }
+                        $nilaiP[$idAlt] = $t;
+                      }
 
-                        foreach ($nilaiP as $id => $val) {
-                          echo "<tr>
-                    <th>A{$idMapping[$id]} {$alternatifNama[$id]}</th>
-                    <td>" . number_format($val, 3) . "</td>
-                  </tr>";
-                        }
+                      foreach ($nilaiP as $idAlt => $val) {
+                        echo "<tr>
+        <th>A{$idMapping[$idAlt]} {$alternatifNama[$idAlt]}</th>
+        <td>" . number_format($val, 3) . "</td>
+    </tr>";
                       }
                       ?>
                     </table>
+
 
                   </div>
                 </div>

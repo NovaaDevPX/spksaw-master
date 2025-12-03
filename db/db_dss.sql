@@ -21,7 +21,7 @@ INSERT INTO `saw_alternatives` (`id_alternative`, `name`) VALUES
 -- TABLE: saw_criterias
 -- ===========================
 CREATE TABLE `saw_criterias` (
-  `id_criteria` TINYINT(3) UNSIGNED NOT NULL,
+  `id_criteria` TINYINT(3) UNSIGNED NOT NULL AUTO_INCREMENT,
   `criteria` VARCHAR(100) NOT NULL,
   `weight` FLOAT NOT NULL,
   `attribute` ENUM('benefit','cost') DEFAULT NULL,
