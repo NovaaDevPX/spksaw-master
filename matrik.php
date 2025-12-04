@@ -368,16 +368,20 @@ ORDER BY b.id_alternative
                             $rRow[$idC] = "-";
                           } else {
 
-                            // Bobot %
+                            // Bobot (persen → desimal)
                             $wj = $bobot[$idC] / 100;
 
-                            // Rumus lama versi kakak namun dibagi jumlah kriteria
-                            $denom = $jmlKrit;
+                            // Fixed scale 1 - 5
+                            $minScale = 1;
+                            $maxScale = 5;
+                            $range = $maxScale - $minScale; // = 4
 
                             if ($krit[$idC] === "cost") {
-                              $r = (1 - ($xij / $denom)) * $wj;
+                              // Rumus cost
+                              $r = (($maxScale - $xij) / $range) * $wj;
                             } else {
-                              $r = ($xij / $denom) * $wj;
+                              // Rumus benefit
+                              $r = (($xij - $minScale) / $range) * $wj;
                             }
 
                             $rRow[$idC] = number_format($r, 3);
@@ -392,6 +396,7 @@ ORDER BY b.id_alternative
                       }
                       ?>
                     </table>
+
 
 
                     <!-- ============================== -->

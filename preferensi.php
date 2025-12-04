@@ -79,7 +79,7 @@ if ($period !== 'all') {
                         if (empty($values)) {
                           echo "<tr><td colspan='3' class='text-center text-danger'>Belum ada data pada periode ini.</td></tr>";
                         } else {
-                          $R = hitungNormalisasi($values, $krit, $bobot);
+                          $R = hitungNormalisasi($db, $values, $krit, $bobot);
                           $P = hitungNilaiAkhir($R);
                           $ranking = perangkingan($P, $alternatif);
 
@@ -130,7 +130,7 @@ if ($period !== 'all') {
 
                       // Jika ada data, hitung ranking untuk period ini
                       if (!empty($valuesP)) {
-                        $RP = hitungNormalisasi($valuesP, $krit, $bobot);
+                        $RP = hitungNormalisasi($db, $valuesP, $krit, $bobot);
                         $PP = hitungNilaiAkhir($RP);
                         $rankingP = perangkingan($PP, $alternatifP);
                       } else {
