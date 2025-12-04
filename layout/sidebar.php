@@ -29,7 +29,7 @@
         <?php
         $role = $_SESSION["role"];
 
-        if ($role == "master" || $role == "admin") {
+        if ($role == "quality_control" || $role == "admin") {
           echo "
           <li class='sidebar-item has-sub'>
             <a href='#' class='sidebar-link'>
@@ -51,7 +51,7 @@
           ";
         }
 
-        if ($role == "master") {
+        if ($role == "admin") {
           echo "
           <li class='sidebar-item has-sub'>
             <a href='#' class='sidebar-link'>

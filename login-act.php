@@ -40,7 +40,7 @@ if ($result && $result->num_rows === 1) {
       case 'mitra':
         header("Location: index.php");
         exit;
-      case 'master':
+      case 'quality_control':
         header("Location: index.php");
         exit;
       case 'manager':

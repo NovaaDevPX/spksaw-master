@@ -84,7 +84,7 @@ CREATE TABLE `saw_users` (
   `id_user` INT(11) NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(50) DEFAULT NULL,
   `password` VARCHAR(150) DEFAULT NULL,
-  `role` ENUM('admin','manager', 'mitra', 'master') DEFAULT 'mitra',
+  `role` ENUM('admin','manager', 'mitra', 'quality_control') DEFAULT 'mitra',
   PRIMARY KEY (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -93,7 +93,7 @@ INSERT INTO `saw_users` (`username`, `password`, `role`) VALUES
 ('admin', MD5('admin'), 'admin'),
 ('manager1', MD5('manager'), 'manager'),
 ('mitra1', MD5('mitra'), 'mitra'),
-('master', MD5('master'), 'master');
+('quality_control', MD5('quality_control'), 'quality_control');
 
 -- ===========================
 -- TRIGGER: hapus evaluasi jika alternatif dihapus

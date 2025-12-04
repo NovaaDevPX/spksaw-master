@@ -32,8 +32,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 // Daftar halaman yang hanya boleh diakses admin
 $adminOnlyPages = ['alternatif.php', 'bobot.php', 'matrik.php'];
 
-// Jika halaman ini termasuk halaman admin dan role bukan admin / master
-if (in_array($currentPage, $adminOnlyPages) && !in_array($_SESSION['role'], ['admin', 'master'])) {
+// Halaman khusus untuk role admin 
+if (in_array($currentPage, $adminOnlyPages) && !in_array($_SESSION['role'], ['admin', 'quality_control'])) {
+
   // Redirect ke halaman dashboard atau login
   header("Location: /spksaw-master/index.php?error=unauthorized");
   exit;
