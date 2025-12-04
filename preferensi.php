@@ -9,7 +9,7 @@ require "include/nama-bulan.php"; // konversi bulan
 // Ambil daftar periode (format YYYY-MM), terurut DESC (mis. 2025-12, 2025-11, ...)
 $periodList = getPeriodList($db);
 
-// Tentukan periode aktif (default = "all")
+// Tentukan periode aktif
 $period = isset($_GET['period']) ? $_GET['period'] : 'all';
 
 // Jika user pilih spesifik period, validasi singkat
@@ -52,7 +52,7 @@ if ($period !== 'all') {
             </form>
 
             <?php if ($period !== 'all'):
-              // tampil single period (seperti sebelumnya)
+              // tampil single period
               $yr = substr($period, 0, 4);
               $mn = substr($period, 5, 2);
               $mnName = $namaBulan[$mn] ?? $mn;
@@ -107,7 +107,7 @@ if ($period !== 'all') {
                 $grouped[$y][] = $p;
               }
 
-              // Tampilkan per tahun (desc). periodList already desc, but ensure years in desc order:
+              // Tampilkan per tahun (desc). 
               krsort($grouped); // years desc
             ?>
 
