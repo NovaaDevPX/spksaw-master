@@ -6,9 +6,6 @@ if (isset($_SESSION['status']) && $_SESSION['status'] === 'login') {
   if ($_SESSION['role'] === 'admin') {
     header("Location: index.php");
     exit;
-  } elseif ($_SESSION['role'] === 'alternatif') {
-    header("Location: alternatif/index.php");
-    exit;
   }
 }
 ?>

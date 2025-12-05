@@ -455,9 +455,36 @@ ORDER BY b.id_alternative
             <i data-feather="x"></i>
           </button>
         </div>
+
         <form action="matrik-simpan.php" method="POST">
-          <input type="hidden" name="period" value="<?= htmlspecialchars($period) ?>">
+
+          <!-- PERIOD RESULT -->
+          <input type="hidden" name="period" id="periodInput">
+
           <div class="modal-body">
+
+            <!-- Pilih Tahun -->
+            <label>Pilih Tahun:</label>
+            <div class="form-group">
+              <select class="form-control form-select" id="tahunSelect" required>
+                <?php
+                $tahunSekarang = date("Y");
+                $tahunSebelumnya = $tahunSekarang - 1;
+
+                echo "<option value='{$tahunSekarang}'>{$tahunSekarang}</option>";
+                echo "<option value='{$tahunSebelumnya}'>{$tahunSebelumnya}</option>";
+                ?>
+              </select>
+            </div>
+
+            <!-- Pilih Bulan -->
+            <label>Pilih Bulan:</label>
+            <div class="form-group">
+              <select class="form-control form-select" id="bulanSelect" required></select>
+            </div>
+
+            <hr>
+
             <label>Nama Alternatif:</label>
             <div class="form-group">
               <select class="form-control form-select" name="id_alternative" required>
@@ -488,27 +515,89 @@ ORDER BY b.id_alternative
 
             <label>Nilai:</label>
             <div class="form-group">
-              <input
-                type="number"
-                name="value"
+              <input type="number" name="value" class="form-control" required min="0" max="5" step="0.1"
                 placeholder="Masukkan nilai..."
-                class="form-control"
-                required
-                min="0"
-                max="5"
-                step="0.1"
                 oninput="if(this.value > 5) this.value = 5;">
             </div>
           </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" name="submit" class="btn btn-primary ml-1">Simpan</button>
+            <button type="submit" class="btn btn-primary ml-1">Simpan</button>
           </div>
+
         </form>
       </div>
     </div>
   </div>
 
+  <script>
+    // Nama bulan
+    const namaBulan = {
+      "01": "Januari",
+      "02": "Februari",
+      "03": "Maret",
+      "04": "April",
+      "05": "Mei",
+      "06": "Juni",
+      "07": "Juli",
+      "08": "Agustus",
+      "09": "September",
+      "10": "Oktober",
+      "11": "November",
+      "12": "Desember"
+    };
+
+    const tahunSelect = document.getElementById("tahunSelect");
+    const bulanSelect = document.getElementById("bulanSelect");
+    const periodInput = document.getElementById("periodInput");
+
+    const currentYear = new Date().getFullYear();
+    const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, "0");
+
+    // Update list bulan sesuai aturan
+    function updateBulan() {
+      const selectedYear = tahunSelect.value;
+      bulanSelect.innerHTML = "";
+
+      let maxMonth = 12;
+
+      // Jika memilih tahun sekarang → bulan hanya sampai bulan saat ini
+      if (parseInt(selectedYear) === currentYear) {
+        maxMonth = parseInt(currentMonth);
+      }
+
+      // Generate bulan valid
+      for (let i = 1; i <= maxMonth; i++) {
+        let mm = i.toString().padStart(2, "0");
+        let option = document.createElement("option");
+        option.value = mm;
+        option.textContent = namaBulan[mm];
+
+        // ===========================
+        // SET DEFAULT: bulan sekarang
+        // ===========================
+        if (parseInt(selectedYear) === currentYear && mm === currentMonth) {
+          option.selected = true;
+        }
+
+        bulanSelect.appendChild(option);
+      }
+
+      updatePeriod();
+    }
+
+    // Generate period (YYYY-MM)
+    function updatePeriod() {
+      periodInput.value = `${tahunSelect.value}-${bulanSelect.value}`;
+    }
+
+    tahunSelect.addEventListener("change", updateBulan);
+    bulanSelect.addEventListener("change", updatePeriod);
+
+    // Set default on modal load
+    updateBulan();
+  </script>
   <?php require "layout/js.php"; ?>
 </body>
 
