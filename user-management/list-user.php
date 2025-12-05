@@ -4,15 +4,6 @@ require "../include/conn.php";
 // Hapus user
 if (isset($_GET["delete"])) {
   $id = intval($_GET["delete"]);
-
-  // Cegah penghapusan user role admin
-  $cek = $db->query("SELECT role FROM saw_users WHERE id_user = $id")->fetch_assoc();
-  if ($cek && $cek['role'] === 'admin') {
-    echo "<script>alert('User dengan role admin tidak boleh dihapus!'); window.location='list-user.php';</script>";
-    exit;
-  }
-
-  // Jika bukan admin → boleh hapus
   $db->query("DELETE FROM saw_users WHERE id_user = $id");
   echo "<script>alert('User berhasil dihapus'); window.location='list-user.php';</script>";
 }
@@ -54,21 +45,15 @@ if (isset($_GET["delete"])) {
                 <td><?= htmlspecialchars($row["username"]) ?></td>
                 <td><?= ucfirst($row["role"]) ?></td>
                 <td>
-
-                  <!-- Tombol edit SELALU ADA -->
                   <a href="edit-user.php?id=<?= $row['id_user'] ?>" class="btn btn-warning btn-sm">
                     <i class="bi bi-pencil-square"></i>
                   </a>
 
-                  <!-- Tombol hapus HANYA tampil jika role BUKAN admin -->
-                  <?php if ($row["role"] !== "admin"): ?>
-                    <a href="list-user.php?delete=<?= $row['id_user'] ?>"
-                      class="btn btn-danger btn-sm"
-                      onclick="return confirm('Hapus user ini?');">
-                      <i class="bi bi-trash"></i>
-                    </a>
-                  <?php endif; ?>
-
+                  <a href="list-user.php?delete=<?= $row['id_user'] ?>"
+                    class="btn btn-danger btn-sm"
+                    onclick="return confirm('Hapus user ini?');">
+                    <i class="bi bi-trash"></i>
+                  </a>
                 </td>
               </tr>
             <?php } ?>
@@ -82,7 +67,7 @@ if (isset($_GET["delete"])) {
 
   <?php require "../layout/js.php"; ?>
 
-  <!-- Bootstrap Icons -->
+  <!-- Bootstrap Icons jika belum ada -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 </body>

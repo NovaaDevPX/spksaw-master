@@ -10,7 +10,11 @@ if (!isset($_GET['id'])) {
 $id = intval($_GET['id']);
 
 // Ambil data user
-$user = $db->query("SELECT * FROM saw_users WHERE id_user = $id")->fetch_assoc();
+$stmt = $db->prepare("SELECT * FROM saw_users WHERE id_user = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$user) {
   echo "<script>alert('User tidak ditemukan'); window.location='list-user.php';</script>";
@@ -19,29 +23,32 @@ if (!$user) {
 
 // Proses update
 if (isset($_POST['update'])) {
-  $username = $_POST['username'];
-  $role = $_POST['role'];
+  $username = trim($_POST['username']);
+  $role = trim($_POST['role']);
   $password = $_POST['password'];
 
-  // Jika password diisi → update password juga
+  // Update jika password diubah
   if (!empty($password)) {
-    $passwordEnc = password_hash($password, PASSWORD_DEFAULT);
-    $db->query("
-      UPDATE saw_users SET 
-        username = '$username',
-        role = '$role',
-        password = '$passwordEnc'
-      WHERE id_user = $id
+    $passwordEnc = md5($password); // gunakan MD5 agar cocok dengan login
+
+    $stmt = $db->prepare("
+      UPDATE saw_users 
+      SET username = ?, role = ?, password = ?
+      WHERE id_user = ?
     ");
+    $stmt->bind_param("sssi", $username, $role, $passwordEnc, $id);
   } else {
-    // Tanpa ubah password
-    $db->query("
-      UPDATE saw_users SET 
-        username = '$username',
-        role = '$role'
-      WHERE id_user = $id
+    // Update tanpa ubah password
+    $stmt = $db->prepare("
+      UPDATE saw_users 
+      SET username = ?, role = ?
+      WHERE id_user = ?
     ");
+    $stmt->bind_param("ssi", $username, $role, $id);
   }
+
+  $stmt->execute();
+  $stmt->close();
 
   echo "<script>alert('User berhasil diupdate'); window.location='list-user.php';</script>";
   exit;
@@ -65,20 +72,31 @@ if (isset($_POST['update'])) {
 
           <div class="mb-3">
             <label class="form-label">Username</label>
-            <input type="text" class="form-control" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
+            <input
+              type="text"
+              class="form-control"
+              name="username"
+              value="<?= htmlspecialchars($user['username']) ?>"
+              required>
           </div>
 
           <div class="mb-3">
             <label class="form-label">Role</label>
             <select name="role" class="form-control" required>
               <option value="admin" <?= $user['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
-              <option value="user" <?= $user['role'] == 'user' ? 'selected' : '' ?>>User</option>
+              <option value="manager" <?= $user['role'] == 'manager' ? 'selected' : '' ?>>Manager</option>
+              <option value="mitra" <?= $user['role'] == 'mitra' ? 'selected' : '' ?>>Mitra</option>
+              <option value="quality_control" <?= $user['role'] == 'quality_control' ? 'selected' : '' ?>>Quality Control</option>
             </select>
           </div>
 
           <div class="mb-3">
             <label class="form-label">Password Baru (opsional)</label>
-            <input type="password" class="form-control" name="password" placeholder="Kosongkan jika tidak ingin mengubah">
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              placeholder="Kosongkan jika tidak ingin mengubah">
           </div>
 
           <button type="submit" name="update" class="btn btn-primary">Simpan Perubahan</button>
