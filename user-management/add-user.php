@@ -88,10 +88,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <div class="mb-3">
               <label class="form-label">Role</label>
               <select name="role" class="form-control" required>
-                <option value="">-- pilih role --</option>
-                <option value="quality_control" <?= (isset($role) && $role === 'quality_control') ? 'selected' : '' ?>>Quality Control</option>
-                <option value="manager" <?= (isset($role) && $role === 'manager') ? 'selected' : '' ?>>Manager</option>
-                <option value="mitra" <?= (isset($role) && $role === 'mitra') ? 'selected' : '' ?>>Mitra</option>
+                <option value="" selected>-- pilih role --</option>
+                <option value="admin">Admin</option>
+                <option value="quality_control">Quality Control</option>
+                <option value="manager">Manager</option>
+                <option value="mitra">Mitra</option>
               </select>
             </div>
 
