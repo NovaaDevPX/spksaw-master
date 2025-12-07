@@ -119,7 +119,7 @@ INSERT INTO `saw_users` (`username`, `password`, `role`) VALUES
 
 
 -- ===========================
--- FOREIGN KEY RELATIONS
+-- FOREIGN KEY 
 -- ===========================
 ALTER TABLE `saw_evaluations`
 ADD CONSTRAINT `fk_eval_alternative`
