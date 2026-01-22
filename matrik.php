@@ -466,15 +466,15 @@ ORDER BY b.id_alternative
             <!-- Pilih Tahun -->
             <label>Pilih Tahun:</label>
             <div class="form-group">
-              <select class="form-control form-select" id="tahunSelect" required>
-                <?php
-                $tahunSekarang = date("Y");
-                $tahunSebelumnya = $tahunSekarang - 1;
-
-                echo "<option value='{$tahunSekarang}'>{$tahunSekarang}</option>";
-                echo "<option value='{$tahunSebelumnya}'>{$tahunSebelumnya}</option>";
-                ?>
-              </select>
+              <input
+                type="number"
+                class="form-control"
+                id="tahunInput"
+                placeholder="Contoh: 2024"
+                value="<?php echo date('Y'); ?>"
+                min="2000"
+                max="<?php echo date('Y'); ?>"
+                required>
             </div>
 
             <!-- Pilih Bulan -->
@@ -548,7 +548,7 @@ ORDER BY b.id_alternative
       "12": "Desember"
     };
 
-    const tahunSelect = document.getElementById("tahunSelect");
+    const tahunInput = document.getElementById("tahunInput");
     const bulanSelect = document.getElementById("bulanSelect");
     const periodInput = document.getElementById("periodInput");
 
@@ -557,27 +557,27 @@ ORDER BY b.id_alternative
 
     // Update list bulan sesuai aturan
     function updateBulan() {
-      const selectedYear = tahunSelect.value;
+      const selectedYear = parseInt(tahunInput.value);
       bulanSelect.innerHTML = "";
+
+      if (!selectedYear) return;
 
       let maxMonth = 12;
 
-      // Jika memilih tahun sekarang → bulan hanya sampai bulan saat ini
-      if (parseInt(selectedYear) === currentYear) {
+      // Jika tahun sekarang → bulan hanya sampai bulan saat ini
+      if (selectedYear === currentYear) {
         maxMonth = parseInt(currentMonth);
       }
 
-      // Generate bulan valid
       for (let i = 1; i <= maxMonth; i++) {
-        let mm = i.toString().padStart(2, "0");
-        let option = document.createElement("option");
+        const mm = i.toString().padStart(2, "0");
+        const option = document.createElement("option");
+
         option.value = mm;
         option.textContent = namaBulan[mm];
 
-        // ===========================
-        // SET DEFAULT: bulan sekarang
-        // ===========================
-        if (parseInt(selectedYear) === currentYear && mm === currentMonth) {
+        // Default bulan sekarang
+        if (selectedYear === currentYear && mm === currentMonth) {
           option.selected = true;
         }
 
@@ -587,17 +587,19 @@ ORDER BY b.id_alternative
       updatePeriod();
     }
 
-    // Generate period (YYYY-MM)
+    // Generate period YYYY-MM
     function updatePeriod() {
-      periodInput.value = `${tahunSelect.value}-${bulanSelect.value}`;
+      if (!bulanSelect.value || !tahunInput.value) return;
+      periodInput.value = `${tahunInput.value}-${bulanSelect.value}`;
     }
 
-    tahunSelect.addEventListener("change", updateBulan);
+    tahunInput.addEventListener("input", updateBulan);
     bulanSelect.addEventListener("change", updatePeriod);
 
-    // Set default on modal load
+    // Init saat load
     updateBulan();
   </script>
+
   <?php require "layout/js.php"; ?>
 </body>
 
