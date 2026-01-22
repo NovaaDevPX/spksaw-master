@@ -473,7 +473,6 @@ ORDER BY b.id_alternative
                 placeholder="Contoh: 2024"
                 value="<?php echo date('Y'); ?>"
                 min="2000"
-                max="<?php echo date('Y'); ?>"
                 required>
             </div>
 
@@ -531,6 +530,8 @@ ORDER BY b.id_alternative
     </div>
   </div>
 
+  // kode javascript untuk mengelola pilihan tahun tanpa validasi
+
   <script>
     // Nama bulan
     const namaBulan = {
@@ -552,32 +553,22 @@ ORDER BY b.id_alternative
     const bulanSelect = document.getElementById("bulanSelect");
     const periodInput = document.getElementById("periodInput");
 
-    const currentYear = new Date().getFullYear();
-    const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, "0");
-
-    // Update list bulan sesuai aturan
+    // Generate bulan selalu lengkap (1–12)
     function updateBulan() {
-      const selectedYear = parseInt(tahunInput.value);
+      const selectedYear = tahunInput.value;
       bulanSelect.innerHTML = "";
 
       if (!selectedYear) return;
 
-      let maxMonth = 12;
-
-      // Jika tahun sekarang → bulan hanya sampai bulan saat ini
-      if (selectedYear === currentYear) {
-        maxMonth = parseInt(currentMonth);
-      }
-
-      for (let i = 1; i <= maxMonth; i++) {
+      for (let i = 1; i <= 12; i++) {
         const mm = i.toString().padStart(2, "0");
         const option = document.createElement("option");
 
         option.value = mm;
         option.textContent = namaBulan[mm];
 
-        // Default bulan sekarang
-        if (selectedYear === currentYear && mm === currentMonth) {
+        // Default ke Januari
+        if (i === 1) {
           option.selected = true;
         }
 
@@ -589,7 +580,7 @@ ORDER BY b.id_alternative
 
     // Generate period YYYY-MM
     function updatePeriod() {
-      if (!bulanSelect.value || !tahunInput.value) return;
+      if (!tahunInput.value || !bulanSelect.value) return;
       periodInput.value = `${tahunInput.value}-${bulanSelect.value}`;
     }
 
@@ -598,6 +589,78 @@ ORDER BY b.id_alternative
 
     // Init saat load
     updateBulan();
+  </script>
+
+  // kode javascript untuk mengelola pilihan tahun dengan validasi
+
+  // <script>
+    //   // Nama bulan
+    //   const namaBulan = {
+    //     "01": "Januari",
+    //     "02": "Februari",
+    //     "03": "Maret",
+    //     "04": "April",
+    //     "05": "Mei",
+    //     "06": "Juni",
+    //     "07": "Juli",
+    //     "08": "Agustus",
+    //     "09": "September",
+    //     "10": "Oktober",
+    //     "11": "November",
+    //     "12": "Desember"
+    //   };
+
+    //   const tahunInput = document.getElementById("tahunInput");
+    //   const bulanSelect = document.getElementById("bulanSelect");
+    //   const periodInput = document.getElementById("periodInput");
+
+    //   const currentYear = new Date().getFullYear();
+    //   const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, "0");
+
+    //   // Update list bulan sesuai aturan
+    //   function updateBulan() {
+    //     const selectedYear = parseInt(tahunInput.value);
+    //     bulanSelect.innerHTML = "";
+
+    //     if (!selectedYear) return;
+
+    //     let maxMonth = 12;
+
+    //     // Jika tahun sekarang → bulan hanya sampai bulan saat ini
+    //     if (selectedYear === currentYear) {
+    //       maxMonth = parseInt(currentMonth);
+    //     }
+
+    //     for (let i = 1; i <= maxMonth; i++) {
+    //       const mm = i.toString().padStart(2, "0");
+    //       const option = document.createElement("option");
+
+    //       option.value = mm;
+    //       option.textContent = namaBulan[mm];
+
+    //       // Default bulan sekarang
+    //       if (selectedYear === currentYear && mm === currentMonth) {
+    //         option.selected = true;
+    //       }
+
+    //       bulanSelect.appendChild(option);
+    //     }
+
+    //     updatePeriod();
+    //   }
+
+    //   // Generate period YYYY-MM
+    //   function updatePeriod() {
+    //     if (!bulanSelect.value || !tahunInput.value) return;
+    //     periodInput.value = `${tahunInput.value}-${bulanSelect.value}`;
+    //   }
+
+    //   tahunInput.addEventListener("input", updateBulan);
+    //   bulanSelect.addEventListener("change", updatePeriod);
+
+    //   // Init saat load
+    //   updateBulan();
+    // 
   </script>
 
   <?php require "layout/js.php"; ?>
