@@ -11,11 +11,18 @@ CREATE TABLE `saw_alternatives` (
   PRIMARY KEY (`id_alternative`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Alternatif hanya 3
-INSERT INTO `saw_alternatives` (`id_alternative`, `name`) VALUES
-(1, 'PT Cinta Abadi'),
-(2, 'PT Alternate'),
-(3, 'PT Zeta');
+INSERT INTO saw_alternatives (id_alternative, name) VALUES
+(1, 'PT Pura Barutama'),
+(2, 'PT Jasuindo Tiga Perkasa'),
+(3, 'PT Wahyu Kartumasindo International'),
+(4, 'PT Cipta Srigati Lestari'),
+(5, 'PT Dua Permata Sejati'),
+(6, 'PT E-Motion Entertainment'),
+(7, 'PT Kinarya Selaras Piranti'),
+(8, 'PT Adhi Nata Karya'),
+(9, 'PT Thales DIS Indonesia'),
+(10, 'PT Idemia Technologies Indonesia');
+
 
 -- ===========================
 -- TABLE: saw_criterias
@@ -28,12 +35,12 @@ CREATE TABLE `saw_criterias` (
   PRIMARY KEY (`id_criteria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-INSERT INTO `saw_criterias` (`id_criteria`, `criteria`, `weight`, `attribute`) VALUES
-(1, 'Kualitas Produk', 25, 'benefit'),
-(2, 'Pelayanan Pelanggan', 10, 'benefit'),
-(3, 'Inovasi Teknologi', 15, 'benefit'),
-(4, 'Harga Produk', 25, 'benefit'),
-(5, 'Waktu Pengiriman', 25, 'benefit');
+INSERT INTO saw_criterias (id_criteria, criteria, weight, attribute) VALUES
+(1, 'Waktu Pengiriman Barang ke Telkomsel', 25, 'benefit'),
+(2, 'Kualitas Barang', 20, 'benefit'),
+(3, 'Solusi Permasalahan', 15, 'benefit'),
+(4, 'Penyelesaian Dokumen Pendukung & Berita Acara', 20, 'benefit'),
+(5, 'Waktu Penyelesaian Masalah', 20, 'benefit');
 
 -- ===========================
 -- TABLE: saw_evaluations
@@ -50,54 +57,6 @@ CREATE TABLE `saw_evaluations` (
   KEY `fk_eval_alt_idx` (`id_alternative`),
   KEY `fk_eval_criteria_idx` (`id_criteria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-
--- ===========================
--- DATA EVALUASI MULTI-PERIODE
--- ===========================
--- INSERT INTO `saw_evaluations` (`id_alternative`, `id_criteria`, `value`, `period`) VALUES
--- -- =========================== 2024-01
--- (1,1,5,'2024-01'),(1,2,4,'2024-01'),(1,3,4,'2024-01'),(1,4,5,'2024-01'),(1,5,4,'2024-01'),
--- (2,1,3,'2024-01'),(2,2,2,'2024-01'),(2,3,3,'2024-01'),(2,4,3,'2024-01'),(2,5,2,'2024-01'),
--- (3,1,5,'2024-01'),(3,2,5,'2024-01'),(3,3,4,'2024-01'),(3,4,5,'2024-01'),(3,5,5,'2024-01'),
-
--- -- =========================== 2024-02
--- (1,1,4,'2024-02'),(1,2,4,'2024-02'),(1,3,4,'2024-02'),(1,4,4,'2024-02'),(1,5,4,'2024-02'),
--- (2,1,3,'2024-02'),(2,2,3,'2024-02'),(2,3,2,'2024-02'),(2,4,3,'2024-02'),(2,5,3,'2024-02'),
--- (3,1,5,'2024-02'),(3,2,5,'2024-02'),(3,3,5,'2024-02'),(3,4,5,'2024-02'),(3,5,5,'2024-02'),
-
--- -- =========================== 2024-03
--- (1,1,4,'2024-03'),(1,2,3,'2024-03'),(1,3,4,'2024-03'),(1,4,4,'2024-03'),(1,5,4,'2024-03'),
--- (2,1,3,'2024-03'),(2,2,3,'2024-03'),(2,3,3,'2024-03'),(2,4,3,'2024-03'),(2,5,2,'2024-03'),
--- (3,1,5,'2024-03'),(3,2,5,'2024-03'),(3,3,4,'2024-03'),(3,4,5,'2024-03'),(3,5,5,'2024-03'),
-
--- -- =========================== 2024-04
--- (1,1,4,'2024-04'),(1,2,3,'2024-04'),(1,3,4,'2024-04'),(1,4,4,'2024-04'),(1,5,4,'2024-04'),
--- (2,1,3,'2024-04'),(2,2,2,'2024-04'),(2,3,3,'2024-04'),(2,4,3,'2024-04'),(2,5,3,'2024-04'),
--- (3,1,5,'2024-04'),(3,2,5,'2024-04'),(3,3,5,'2024-04'),(3,4,5,'2024-04'),(3,5,5,'2024-04'),
-
-
--- -- =========================== 2025-09
--- (1,1,4,'2025-09'),(1,2,4,'2025-09'),(1,3,3,'2025-09'),(1,4,4,'2025-09'),(1,5,4,'2025-09'),
--- (2,1,3,'2025-09'),(2,2,3,'2025-09'),(2,3,2,'2025-09'),(2,4,3,'2025-09'),(2,5,3,'2025-09'),
--- (3,1,5,'2025-09'),(3,2,5,'2025-09'),(3,3,5,'2025-09'),(3,4,5,'2025-09'),(3,5,5,'2025-09'),
-
--- -- =========================== 2025-10
--- (1,1,5,'2025-10'),(1,2,4,'2025-10'),(1,3,4,'2025-10'),(1,4,5,'2025-10'),(1,5,5,'2025-10'),
--- (2,1,3,'2025-10'),(2,2,3,'2022025-10'),(2,3,3,'2025-10'),(2,4,3,'2025-10'),(2,5,3,'2025-10'),
--- (3,1,5,'2025-10'),(3,2,5,'2025-10'),(3,3,5,'2025-10'),(3,4,5,'2025-10'),(3,5,5,'2025-10'),
-
--- -- =========================== 2025-11
--- (1,1,5,'2025-11'),(1,2,4,'2025-11'),(1,3,4,'2025-11'),(1,4,4,'2025-11'),(1,5,5,'2025-11'),
--- (2,1,3,'2025-11'),(2,2,3,'2025-11'),(2,3,2,'2025-11'),(2,4,3,'2025-11'),(2,5,3,'2025-11'),
--- (3,1,5,'2025-11'),(3,2,5,'2025-11'),(3,3,5,'2025-11'),(3,4,5,'2025-11'),(3,5,5,'2025-11'),
-
--- -- =========================== 2025-12
--- (1,1,5,'2025-12'),(1,2,4,'2025-12'),(1,3,4,'2025-12'),(1,4,5,'2025-12'),(1,5,5,'2025-12'),
--- (2,1,3,'2025-12'),(2,2,2,'2025-12'),(2,3,3,'2025-12'),(2,4,3,'2025-12'),(2,5,3,'2025-12'),
--- (3,1,5,'2025-12'),(3,2,5,'2025-12'),(3,3,5,'2025-12'),(3,4,5,'2025-12'),(3,5,5,'2025-12');
-
-
 
 -- ===========================
 -- TABLE: saw_users
@@ -117,6 +76,68 @@ INSERT INTO `saw_users` (`username`, `password`, `role`) VALUES
 ('mitra1', MD5('mitra'), 'mitra'),
 ('quality_control', MD5('quality_control'), 'quality_control');
 
+
+INSERT INTO saw_evaluations (id_alternative, id_criteria, value, period)
+SELECT
+    a.id_alternative,
+    c.id_criteria,
+    ROUND(1 + (RAND() * 4), 0) AS value,   -- nilai 1 s/d 5
+    p.period
+FROM saw_alternatives a
+CROSS JOIN saw_criterias c
+CROSS JOIN (
+    SELECT '2023-01' AS period UNION ALL
+    SELECT '2023-02' UNION ALL
+    SELECT '2023-03' UNION ALL
+    SELECT '2023-04' UNION ALL
+    SELECT '2023-05' UNION ALL
+    SELECT '2023-06' UNION ALL
+    SELECT '2023-07' UNION ALL
+    SELECT '2023-08' UNION ALL
+    SELECT '2023-09' UNION ALL
+    SELECT '2023-10' UNION ALL
+    SELECT '2023-11' UNION ALL
+    SELECT '2023-12' UNION ALL
+
+    SELECT '2024-01' UNION ALL
+    SELECT '2024-02' UNION ALL
+    SELECT '2024-03' UNION ALL
+    SELECT '2024-04' UNION ALL
+    SELECT '2024-05' UNION ALL
+    SELECT '2024-06' UNION ALL
+    SELECT '2024-07' UNION ALL
+    SELECT '2024-08' UNION ALL
+    SELECT '2024-09' UNION ALL
+    SELECT '2024-10' UNION ALL
+    SELECT '2024-11' UNION ALL
+    SELECT '2024-12' UNION ALL
+
+    SELECT '2025-01' UNION ALL
+    SELECT '2025-02' UNION ALL
+    SELECT '2025-03' UNION ALL
+    SELECT '2025-04' UNION ALL
+    SELECT '2025-05' UNION ALL
+    SELECT '2025-06' UNION ALL
+    SELECT '2025-07' UNION ALL
+    SELECT '2025-08' UNION ALL
+    SELECT '2025-09' UNION ALL
+    SELECT '2025-10' UNION ALL
+    SELECT '2025-11' UNION ALL
+    SELECT '2025-12' UNION ALL
+
+    SELECT '2026-01' UNION ALL
+    SELECT '2026-02' UNION ALL
+    SELECT '2026-03' UNION ALL
+    SELECT '2026-04' UNION ALL
+    SELECT '2026-05' UNION ALL
+    SELECT '2026-06' UNION ALL
+    SELECT '2026-07' UNION ALL
+    SELECT '2026-08' UNION ALL
+    SELECT '2026-09' UNION ALL
+    SELECT '2026-10' UNION ALL
+    SELECT '2026-11' UNION ALL
+    SELECT '2026-12'
+) p;
 
 -- ===========================
 -- FOREIGN KEY 

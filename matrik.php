@@ -50,13 +50,21 @@ require "include/nama-bulan.php";
               </div>
 
               <div class="card-content">
-                <div class="card-body">
-                  <p class="card-text">
-                    Melakukan perhitungan normalisasi untuk mendapatkan matriks nilai ternormalisasi (R), dengan ketentuan:<br>
-                    Jika atribut <b>benefit</b> maka digunakan rumus: Rij = ( Xij / max{Xij} )<br>
-                    Jika atribut <b>cost</b> maka digunakan rumus: Rij = ( min{Xij} / Xij )
-                  </p>
+                <div class="card shadow-sm border-0">
+                  <div class="card-body">
+                    <h5 class="card-title mb-3">
+                      <i class="bi bi-calculator"></i> Normalisasi Metode SAW
+                    </h5>
+
+                    <p class="card-text">
+                      Melakukan perhitungan normalisasi untuk mendapatkan
+                      <b>matriks nilai ternormalisasi (R)</b>, dengan ketentuan:
+                    </p>
+
+                    <p class="card-text"> Melakukan perhitungan normalisasi untuk mendapatkan matriks nilai ternormalisasi (R), dengan ketentuan:<br> Jika atribut <b>benefit</b> maka digunakan rumus: Rij = ( Xij / max{Xij} )<br> Jika atribut <b>cost</b> maka digunakan rumus: Rij = ( min{Xij} / Xij ) </p>
+                  </div>
                 </div>
+
 
                 <button type="button" class="btn btn-outline-success btn-sm m-2" data-bs-toggle="modal" data-bs-target="#inlineForm">
                   Isi Nilai Alternatif
@@ -178,6 +186,7 @@ require "include/nama-bulan.php";
 
                   <div class="card shadow-sm mb-4">
                     <div class="card-body">
+
                       <form method="GET" class="row g-3">
 
                         <!-- Pilih Tahun -->
@@ -447,7 +456,7 @@ ORDER BY b.id_alternative
   <!-- MODAL INPUT NILAI -->
   <!-- ========================== -->
   <div class="modal fade text-left" id="inlineForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel33" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+    <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title" id="myModalLabel33">Isi Nilai Kandidat</h4>
@@ -462,6 +471,18 @@ ORDER BY b.id_alternative
           <input type="hidden" name="period" id="periodInput">
 
           <div class="modal-body">
+
+            <!-- KETERANGAN -->
+            <div class="alert alert-info mt-3 d-flex align-items-center">
+              <div>
+                <strong>Keterangan Nilai:</strong><br>
+                1 = Sangat Buruk |
+                2 = Buruk |
+                3 = Cukup |
+                4 = Baik |
+                5 = Sangat Baik
+              </div>
+            </div>
 
             <!-- Pilih Tahun -->
             <label>Pilih Tahun:</label>
