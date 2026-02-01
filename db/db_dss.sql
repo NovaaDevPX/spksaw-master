@@ -49,7 +49,7 @@ CREATE TABLE `saw_evaluations` (
   `id_eval` INT NOT NULL AUTO_INCREMENT,
   `id_alternative` SMALLINT(5) UNSIGNED NOT NULL,
   `id_criteria` TINYINT(3) UNSIGNED NOT NULL,
-  `value` FLOAT NOT NULL CHECK (`value` >= 0 AND `value` <= 5),
+  `value` ENUM('1','2','3','4','5') NOT NULL,
   `period` CHAR(7) NOT NULL COMMENT 'Format: YYYY-MM',
   PRIMARY KEY (`id_eval`),
 
@@ -81,7 +81,7 @@ INSERT INTO saw_evaluations (id_alternative, id_criteria, value, period)
 SELECT
     a.id_alternative,
     c.id_criteria,
-    ROUND(1 + (RAND() * 4), 0) AS value,   -- nilai 1 s/d 5
+    CAST(ROUND(1 + (RAND() * 4), 0) AS CHAR) AS value,
     p.period
 FROM saw_alternatives a
 CROSS JOIN saw_criterias c
@@ -125,18 +125,7 @@ CROSS JOIN (
     SELECT '2025-11' UNION ALL
     SELECT '2025-12' UNION ALL
 
-    SELECT '2026-01' UNION ALL
-    SELECT '2026-02' UNION ALL
-    SELECT '2026-03' UNION ALL
-    SELECT '2026-04' UNION ALL
-    SELECT '2026-05' UNION ALL
-    SELECT '2026-06' UNION ALL
-    SELECT '2026-07' UNION ALL
-    SELECT '2026-08' UNION ALL
-    SELECT '2026-09' UNION ALL
-    SELECT '2026-10' UNION ALL
-    SELECT '2026-11' UNION ALL
-    SELECT '2026-12'
+    SELECT '2026-01'
 ) p;
 
 -- ===========================

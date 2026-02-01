@@ -60,9 +60,8 @@ function hitungNormalisasi($db, $values, $krit, $bobot)
   $R = [];
 
   // Fixed scale
-  $minScale = 1;
+
   $maxScale = 5;
-  $range = $maxScale - $minScale; // = 4
 
   foreach ($values as $id_alt => $criteriaVals) {
     foreach ($criteriaVals as $id_crit => $xij) {
@@ -70,13 +69,10 @@ function hitungNormalisasi($db, $values, $krit, $bobot)
       // Bobot % -> desimal
       $wj = $bobot[$id_crit] / 100;
 
-      // Jika cost
-      if ($krit[$id_crit] === 'cost') {
-        // (max - xij) / range * wj
-        $r = (($maxScale - $xij) / $range) * $wj;
+      if ($krit[$id_crit] === "cost") {
+        $r = (($maxScale - $xij + 1) / $maxScale) * $wj;
       } else {
-        // benefit → (xij - min) / range * wj
-        $r = (($xij - $minScale) / $range) * $wj;
+        $r = ($xij / $maxScale) * $wj;
       }
 
       $R[$id_alt][$id_crit] = $r;

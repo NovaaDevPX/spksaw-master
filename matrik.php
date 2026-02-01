@@ -383,14 +383,11 @@ ORDER BY b.id_alternative
                             // Fixed scale 1 - 5
                             $minScale = 1;
                             $maxScale = 5;
-                            $range = $maxScale - $minScale; // = 4
 
                             if ($krit[$idC] === "cost") {
-                              // Rumus cost
-                              $r = (($maxScale - $xij) / $range) * $wj;
+                              $r = (($maxScale - $xij + 1) / $maxScale) * $wj;
                             } else {
-                              // Rumus benefit
-                              $r = (($xij - $minScale) / $range) * $wj;
+                              $r = ($xij / $maxScale) * $wj;
                             }
 
                             $rRow[$idC] = number_format($r, 3);
