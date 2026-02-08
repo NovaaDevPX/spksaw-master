@@ -4,16 +4,9 @@ require "preferensi-fungsi.php";
 require "include/conn.php";
 require "include/nama-bulan.php";
 
-// Pastikan session sudah berjalan (head.php biasanya sudah start session)
-// Tentukan role pengguna (fallback 'guest' jika tidak ada)
 $role = $_SESSION['role'] ?? 'guest';
-
-/* ================================
-   Ambil daftar periode (YYYY-MM)
-   ================================ */
 $periodList = getPeriodList($db);
 
-// Jika user adalah mitra -> paksa melihat bulan berjalan saja 
 $showFilter = true;
 if ($role === 'mitra') {
   $showFilter = false;
@@ -21,19 +14,12 @@ if ($role === 'mitra') {
   $nowMonth = date("m");
   $period = "{$nowYear}-{$nowMonth}";
 } else {
-  // Non-mitra -> izinkan pilih period (GET) atau 'all'
   $period = isset($_GET['period']) ? trim($_GET['period']) : 'all';
-
-  // Validasi format jika bukan 'all'
   if ($period !== 'all' && !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period)) {
-    // fallback: gunakan first period dari db jika ada, else 'all'
     $period = $periodList[0] ?? 'all';
   }
 }
 
-/* ================================
-   Jika period bukan 'all' -> ambil nama bulan & tahun untuk header
-   ================================ */
 if ($period !== 'all') {
   $yr = substr($period, 0, 4);
   $mn = substr($period, 5, 2);
@@ -63,23 +49,13 @@ if ($period !== 'all') {
   <div id="app">
     <?php require "layout/sidebar.php"; ?>
     <div id="main">
-
-      <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-          <i class="bi bi-justify fs-3"></i>
-        </a>
-      </header>
-
       <div class="page-heading">
         <h3>Hasil Perangkingan</h3>
       </div>
-
       <div class="page-content">
-
         <section class="row">
           <div class="col-12">
-
-            <!-- FILTER PERIODE (sembunyikan untuk mitra) -->
+            <!-- FILTER -->
             <?php if ($showFilter): ?>
               <form method="GET" class="mb-4">
                 <label class="fw-semibold mb-1">Pilih Periode:</label>
@@ -91,177 +67,235 @@ if ($period !== 'all') {
                     $bulanNama = $namaBulan[$m] ?? $m;
                   ?>
                     <option value="<?= htmlspecialchars($p) ?>" <?= $p === $period ? 'selected' : '' ?>>
-                      <?= htmlspecialchars($bulanNama . " " . $y) ?>
+                      <?= htmlspecialchars($bulanNama . ' ' . $y) ?>
                     </option>
                   <?php endforeach; ?>
                 </select>
               </form>
-            <?php else: ?>
-              <div class="alert alert-info mb-4">
-                Anda masuk sebagai <strong>Mitra</strong>. Menampilkan data untuk <strong><?= htmlspecialchars($namaBulan[$nowMonth] . " " . $nowYear) ?></strong>.
-              </div>
             <?php endif; ?>
 
-            <div class="d-flex justify-content-end" style="margin-bottom: 20px;">
-              <a href="export-preferensi.php?period=<?= $period ?>"
-                class="btn btn-success btn-sm m-2 shadow-sm d-flex align-items-center gap-2 export-btn"
-                target="_blank">
-                <span>Export PDF</span>
-              </a>
-            </div>
+            <!-- SINGLE PERIODE -->
+            <?php if ($period !== 'all'):
+              list($values, $alternatif) = getEvaluasi($db, $period);
+              list($krit, $bobot) = getKriteria($db);
 
-            <!-- TAMPILAN SINGLE PERIODE -->
-            <?php if ($period !== 'all'): ?>
-              <div class="card shadow-sm mb-3">
-                <div class="card-header bg-light">
-                  <h4 class="card-title mb-0">Ranking Periode <?= htmlspecialchars($mnName . ' ' . $yr) ?></h4>
-                </div>
+              if (!empty($values)):
+                $R = hitungNormalisasi($db, $values, $krit, $bobot);
+                $P = hitungNilaiAkhir($R);
+                $ranking = perangkingan($P, $alternatif);
+                $narasi = buatNarasiRankingBreak($ranking, $mnName, $yr);
+            ?>
 
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-striped mb-0">
-                      <thead>
-                        <tr>
-                          <th>Peringkat</th>
-                          <th>Alternatif</th>
-                          <th>Nilai Akhir (P)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php
-                        // ambil evaluasi untuk period ini
-                        list($values, $alternatif) = getEvaluasi($db, $period);
-                        list($krit, $bobot) = getKriteria($db);
+                <div class="card p-4 shadow-sm">
 
-                        if (empty($values)) {
-                          echo "<tr><td colspan='3' class='text-center text-danger'>Belum ada data pada periode ini.</td></tr>";
-                        } else {
-                          // hitung normalisasi (fungsi di preferensi-fungsi.php)
-                          // beberapa implementasi hitungNormalisasi menerima $db sebagai argumen.
-                          // kami coba panggil dengan $db terlebih dahulu (sesuaikan bila fungsi anda tanpa $db).
-                          if (function_exists('hitungNormalisasi')) {
-                            // cek jumlah parameter fungsi hitungNormalisasi
-                            $ref = new ReflectionFunction('hitungNormalisasi');
-                            $params = $ref->getNumberOfParameters();
-                            if ($params === 4) {
-                              $R = hitungNormalisasi($db, $values, $krit, $bobot);
-                            } else {
-                              // anggap definisi: hitungNormalisasi($db, $values, $krit, $bobot)
-                              $R = hitungNormalisasi($db, $values, $krit, $bobot);
-                            }
-                          } else {
-                            // fallback: manual (very basic), jangan biarkan fatal
-                            $R = [];
-                            foreach ($values as $id_alt => $criteriaVals) {
-                              foreach ($criteriaVals as $id_crit => $xij) {
-                                $wj = ($bobot[$id_crit] ?? 0) / 100;
-                                $R[$id_alt][$id_crit] = ($krit[$id_crit] === 'cost') ? (1 - ($xij / 5)) * $wj : ($xij / 5) * $wj;
-                              }
-                            }
-                          }
-
-                          $P = hitungNilaiAkhir($R);
-                          $ranking = perangkingan($P, $alternatif);
-
-                          foreach ($ranking as $row) {
-                            echo "<tr>
-                                    <td>" . htmlspecialchars($row['ranking']) . "</td>
-                                    <td>" . htmlspecialchars($row['name']) . "</td>
-                                    <td>" . htmlspecialchars($row['nilai']) . "</td>
-                                  </tr>";
-                          }
-                        }
-                        ?>
-                      </tbody>
-                    </table>
+                  <!-- NARASI RANKING 1 -->
+                  <div class="alert alert-primary">
+                    <?= nl2br(htmlspecialchars($narasi['narasi_1'])) ?>
                   </div>
-                </div>
-              </div>
 
-            <?php else:
-              // period == all -> kelompokkan periodList berdasarkan tahun (descending)
+                  <!-- TABEL RANKING 1 -->
+                  <div class="">
+                    <div class="table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th>Peringkat</th>
+                            <th>Alternatif</th>
+                            <th>Nilai Akhir</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><?= $narasi['rank1']['ranking'] ?></td>
+                            <td><?= htmlspecialchars($narasi['rank1']['name']) ?></td>
+                            <td><?= $narasi['rank1']['nilai'] ?></td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <p>
+                        Dengan Nilai Per Kriteria sebagai berikut:
+                      </p>
+
+                      <table class="table table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Kriteria</th>
+                            <th>Nilai</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <?php
+                          $rank1Id = $narasi['rank1']['id'];
+                          $rank1Data = getNilaiPerKriteria($values, $rank1Id, $krit);
+                          foreach ($rank1Data as $k => $v): ?>
+                            <tr>
+                              <td><?= htmlspecialchars($k) ?></td>
+                              <td><?= $v ?></td>
+                            </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <hr class="my-4">
+
+                  <!-- NARASI RANKING SELANJUTNYA -->
+                  <?php if (!empty($narasi['rank_lanjutan'])): ?>
+                    <div class="alert alert-info">
+                      <p>Peringkat selanjutnya</p>
+                    </div>
+
+                    <div class="table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th>Peringkat</th>
+                            <th>Alternatif</th>
+                            <th>Nilai Akhir</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <?php foreach ($narasi['rank_lanjutan'] as $r): ?>
+                            <tr>
+                              <td><?= $r['ranking'] ?></td>
+                              <td><?= htmlspecialchars($r['name']) ?></td>
+                              <td><?= $r['nilai'] ?></td>
+                            </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                      </table>
+                    </div>
+                  <?php endif; ?>
+
+                <?php else: ?>
+                  <div class="alert alert-danger text-center">Belum ada data pada periode ini.</div>
+                <?php endif; ?>
+                </div>
+
+              <?php else:
+              // MODE ALL PERIODE
               $grouped = [];
               foreach ($periodList as $p) {
                 $y = substr($p, 0, 4);
-                if (!isset($grouped[$y])) $grouped[$y] = [];
                 $grouped[$y][] = $p;
               }
-              krsort($grouped); // years desc
-            ?>
+              krsort($grouped);
+              ?>
 
-              <?php foreach ($grouped as $year => $periodsOfYear): ?>
-                <div class="card shadow-sm mb-4">
-                  <div class="card-header">
-                    <h5 class="mb-0">Tahun <?= htmlspecialchars($year) ?></h5>
-                  </div>
-                  <div class="card-body">
+                <?php foreach ($grouped as $year => $periods): ?>
+                  <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                      <h5 class="mb-0">Tahun <?= htmlspecialchars($year) ?></h5>
+                    </div>
+                    <div class="card-body">
+                      <?php foreach ($periods as $p):
+                        $m = substr($p, 5, 2);
+                        $bulanNama = $namaBulan[$m] ?? $m;
 
-                    <?php
-                    // Untuk tiap bulan di tahun ini (periodsOfYear urut seperti periodList)
-                    foreach ($periodsOfYear as $p):
-                      $m = substr($p, 5, 2);
-                      $bulanNama = $namaBulan[$m] ?? $m;
+                        list($valuesP, $alternatifP) = getEvaluasi($db, $p);
+                        list($krit, $bobot) = getKriteria($db);
 
-                      // Ambil data evaluasi untuk period $p dan hitung ranking
-                      list($valuesP, $alternatifP) = getEvaluasi($db, $p);
-                      list($krit, $bobot) = getKriteria($db);
-
-                      if (!empty($valuesP)) {
-                        // panggil hitungNormalisasi sesuai definisi yang ada
-                        $ref = new ReflectionFunction('hitungNormalisasi');
-                        $params = $ref->getNumberOfParameters();
-                        if ($params === 4) {
+                        if (!empty($valuesP)):
                           $RP = hitungNormalisasi($db, $valuesP, $krit, $bobot);
-                        } else {
-                          $RP = hitungNormalisasi($db, $valuesP, $krit, $bobot);
-                        }
+                          $PP = hitungNilaiAkhir($RP);
+                          $rankingP = perangkingan($PP, $alternatifP);
+                          $narasiP = buatNarasiRankingBreak($rankingP, $bulanNama, $year);
+                        else:
+                          $rankingP = [];
+                        endif;
+                      ?>
+                        <div class="mb-4">
+                          <h6><?= htmlspecialchars($bulanNama) ?></h6>
+                          <?php if (!empty($rankingP)): ?>
+                            <div class="alert alert-primary small">
+                              <?= nl2br(htmlspecialchars($narasiP['narasi_1'])) ?>
+                            </div>
 
-                        $PP = hitungNilaiAkhir($RP);
-                        $rankingP = perangkingan($PP, $alternatifP);
-                      } else {
-                        $rankingP = [];
-                      }
-                    ?>
-                      <div class="mb-3">
-                        <h6 class="mb-2"><?= htmlspecialchars($bulanNama) ?></h6>
-
-                        <?php if (empty($rankingP)): ?>
-                          <div class="alert alert-warning small mb-3">Belum ada data evaluasi untuk periode <?= htmlspecialchars($p) ?>.</div>
-                        <?php else: ?>
-                          <div class="table-responsive mb-3">
-                            <table class="table table-sm table-bordered">
-                              <thead class="table-light">
-                                <tr>
-                                  <th style="width:10%;">Peringkat</th>
-                                  <th>Alternatif</th>
-                                  <th>Nilai Akhir (P)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <?php foreach ($rankingP as $r): ?>
+                            <div class="table-responsive mb-2">
+                              <table class="table table-striped">
+                                <thead>
                                   <tr>
-                                    <td><?= htmlspecialchars($r['ranking']) ?></td>
-                                    <td><?= htmlspecialchars($r['name']) ?></td>
-                                    <td><?= htmlspecialchars($r['nilai']) ?></td>
+                                    <th>Peringkat</th>
+                                    <th>Alternatif</th>
+                                    <th>Nilai Akhir</th>
                                   </tr>
-                                <?php endforeach; ?>
-                              </tbody>
-                            </table>
-                          </div>
-                        <?php endif; ?>
-                      </div>
-                    <?php endforeach; ?>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td><?= $narasiP['rank1']['ranking'] ?></td>
+                                    <td><?= htmlspecialchars($narasiP['rank1']['name']) ?></td>
+                                    <td><?= $narasiP['rank1']['nilai'] ?></td>
+                                  </tr>
+                                </tbody>
+                              </table>
 
+                              <p>
+                                Dengan Nilai Per Kriteria sebagai berikut:
+                              </p>
+
+                              <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                  <tr>
+                                    <th>Kriteria</th>
+                                    <th>Nilai</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <?php
+                                  $rank1Id = $narasiP['rank1']['id'];
+                                  $rank1Data = getNilaiPerKriteria($valuesP, $rank1Id, $krit);
+                                  foreach ($rank1Data as $k => $v): ?>
+                                    <tr>
+                                      <td><?= htmlspecialchars($k) ?></td>
+                                      <td><?= $v ?></td>
+                                    </tr>
+                                  <?php endforeach; ?>
+                                </tbody>
+                              </table>
+                            </div>
+
+                            <?php if (!empty($narasiP['rank_lanjutan'])): ?>
+                              <div class="alert alert-info small">
+                                <p>Peringkat Selanjutnya</p>
+                              </div>
+
+                              <div class="table-responsive mb-2">
+                                <table class="table table-sm table-striped">
+                                  <thead>
+                                    <tr>
+                                      <th>Peringkat</th>
+                                      <th>Alternatif</th>
+                                      <th>Nilai Akhir</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <?php foreach ($narasiP['rank_lanjutan'] as $r): ?>
+                                      <tr>
+                                        <td><?= $r['ranking'] ?></td>
+                                        <td><?= htmlspecialchars($r['name']) ?></td>
+                                        <td><?= $r['nilai'] ?></td>
+                                      </tr>
+                                    <?php endforeach; ?>
+                                  </tbody>
+                                </table>
+                              </div>
+                            <?php endif; ?>
+
+                          <?php else: ?>
+                            <div class="alert alert-warning small">Belum ada data evaluasi.</div>
+                          <?php endif; ?>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
                   </div>
-                </div>
-              <?php endforeach; ?>
+                <?php endforeach; ?>
 
-            <?php endif; ?>
-
+              <?php endif; ?>
           </div>
         </section>
       </div>
-
     </div>
   </div>
 
