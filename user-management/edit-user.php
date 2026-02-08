@@ -1,9 +1,11 @@
 <?php
 require "../include/conn.php";
 
+$errors = [];
+
 // Ambil ID dari URL
 if (!isset($_GET['id'])) {
-  echo "<script>alert('User tidak ditemukan'); window.location='list-user.php';</script>";
+  header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
   exit;
 }
 
@@ -17,7 +19,7 @@ $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$user) {
-  echo "<script>alert('User tidak ditemukan'); window.location='list-user.php';</script>";
+  header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
   exit;
 }
 
@@ -27,31 +29,61 @@ if (isset($_POST['update'])) {
   $role = trim($_POST['role']);
   $password = $_POST['password'];
 
-  // Update jika password diubah
-  if (!empty($password)) {
-    $passwordEnc = md5($password); // gunakan MD5 agar cocok dengan login
+  $allowedRoles = ['admin', 'manager', 'mitra', 'quality_control'];
 
-    $stmt = $db->prepare("
-      UPDATE saw_users 
-      SET username = ?, role = ?, password = ?
-      WHERE id_user = ?
-    ");
-    $stmt->bind_param("sssi", $username, $role, $passwordEnc, $id);
-  } else {
-    // Update tanpa ubah password
-    $stmt = $db->prepare("
-      UPDATE saw_users 
-      SET username = ?, role = ?
-      WHERE id_user = ?
-    ");
-    $stmt->bind_param("ssi", $username, $role, $id);
+  // Validasi username
+  if ($username === '') {
+    $errors[] = "Username wajib diisi.";
+  } elseif (strlen($username) < 4) {
+    $errors[] = "Username minimal 4 karakter.";
+  } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+    $errors[] = "Username hanya boleh huruf, angka, dan underscore.";
   }
 
-  $stmt->execute();
-  $stmt->close();
+  // Validasi role
+  if (!in_array($role, $allowedRoles, true)) {
+    $errors[] = "Role tidak valid.";
+  }
 
-  echo "<script>alert('User berhasil diupdate'); window.location='list-user.php';</script>";
-  exit;
+  // Validasi password jika diisi
+  if (!empty($password)) {
+    if (strlen($password) < 5) {
+      $errors[] = "Password minimal 5 karakter.";
+    } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?]/', $password)) {
+      $errors[] = "Password harus mengandung karakter spesial.";
+    }
+  }
+
+  if (empty($errors)) {
+
+    if (!empty($password)) {
+      $passwordEnc = md5($password);
+
+      $stmt = $db->prepare("
+        UPDATE saw_users 
+        SET username = ?, role = ?, password = ?
+        WHERE id_user = ?
+      ");
+      $stmt->bind_param("sssi", $username, $role, $passwordEnc, $id);
+    } else {
+      $stmt = $db->prepare("
+        UPDATE saw_users 
+        SET username = ?, role = ?
+        WHERE id_user = ?
+      ");
+      $stmt->bind_param("ssi", $username, $role, $id);
+    }
+
+    if ($stmt->execute()) {
+      $stmt->close();
+      header("Location: list-user.php?msg=User berhasil diupdate&type=success");
+      exit;
+    } else {
+      $errors[] = "Gagal mengupdate user.";
+    }
+
+    $stmt->close();
+  }
 }
 ?>
 
@@ -64,10 +96,20 @@ if (isset($_POST['update'])) {
     <?php require "../layout/sidebar.php"; ?>
 
     <div id="main" class="py-4">
-
       <h3>Edit User</h3>
 
-      <div class="card p-4 mt-3" style="max-width: 500px;">
+      <div class="card p-4 mt-3">
+
+        <?php if (!empty($errors)): ?>
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              <?php foreach ($errors as $e): ?>
+                <li><?= htmlspecialchars($e) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+
         <form method="POST">
 
           <div class="mb-3">
@@ -97,6 +139,9 @@ if (isset($_POST['update'])) {
               class="form-control"
               name="password"
               placeholder="Kosongkan jika tidak ingin mengubah">
+            <div class="form-text">
+              Minimal 5 karakter dan harus mengandung karakter spesial.
+            </div>
           </div>
 
           <button type="submit" name="update" class="btn btn-primary">Simpan Perubahan</button>

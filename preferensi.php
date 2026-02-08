@@ -43,6 +43,22 @@ if ($period !== 'all') {
 <!DOCTYPE html>
 <html lang="en">
 
+<head>
+  <style>
+    .export-btn {
+      border-radius: 30px;
+      padding: 8px 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .export-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+
 <body>
   <div id="app">
     <?php require "layout/sidebar.php"; ?>
@@ -59,6 +75,7 @@ if ($period !== 'all') {
       </div>
 
       <div class="page-content">
+
         <section class="row">
           <div class="col-12">
 
@@ -84,6 +101,14 @@ if ($period !== 'all') {
                 Anda masuk sebagai <strong>Mitra</strong>. Menampilkan data untuk <strong><?= htmlspecialchars($namaBulan[$nowMonth] . " " . $nowYear) ?></strong>.
               </div>
             <?php endif; ?>
+
+            <div class="d-flex justify-content-end" style="margin-bottom: 20px;">
+              <a href="export-preferensi.php?period=<?= $period ?>"
+                class="btn btn-success btn-sm m-2 shadow-sm d-flex align-items-center gap-2 export-btn"
+                target="_blank">
+                <span>Export PDF</span>
+              </a>
+            </div>
 
             <!-- TAMPILAN SINGLE PERIODE -->
             <?php if ($period !== 'all'): ?>

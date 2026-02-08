@@ -1,55 +1,69 @@
 <?php
-// user-management/add-user.php
 require "../include/conn.php";
+
+$errors = [];
 
 // Proses hanya jika POST
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  // Ambil & sanitasi input dasar
   $username = isset($_POST['username']) ? trim($_POST['username']) : '';
   $rawPassword = isset($_POST['password']) ? $_POST['password'] : '';
   $role = isset($_POST['role']) ? trim($_POST['role']) : '';
 
-  // Daftar role yang diizinkan 
   $allowedRoles = ['admin', 'manager', 'mitra', 'quality_control'];
 
-  // Validasi sederhana
-  $errors = [];
-  if ($username === '') $errors[] = "Username wajib diisi.";
-  if ($rawPassword === '') $errors[] = "Password wajib diisi.";
-  if (!in_array($role, $allowedRoles, true)) $errors[] = "Role tidak valid.";
+  // Validasi username
+  if ($username === '') {
+    $errors[] = "Username wajib diisi.";
+  } elseif (strlen($username) < 4) {
+    $errors[] = "Username minimal 4 karakter.";
+  } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+    $errors[] = "Username hanya boleh huruf, angka, dan underscore.";
+  }
+
+  // Validasi password
+  if ($rawPassword === '') {
+    $errors[] = "Password wajib diisi.";
+  } elseif (strlen($rawPassword) < 5) {
+    $errors[] = "Password minimal 5 karakter.";
+  } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?]/', $rawPassword)) {
+    $errors[] = "Password harus mengandung minimal 1 karakter spesial.";
+  }
+
+  // Validasi role
+  if (!in_array($role, $allowedRoles, true)) {
+    $errors[] = "Role tidak valid.";
+  }
 
   if (empty($errors)) {
-    // Cek apakah username sudah ada
     $stmt = $db->prepare("SELECT id_user FROM saw_users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $res = $stmt->get_result();
+
     if ($res && $res->num_rows > 0) {
-      $errors[] = "Username sudah digunakan, pilih username lain.";
+      $errors[] = "Username sudah digunakan.";
       $stmt->close();
     } else {
       $stmt->close();
 
-      // hashing password
       $passwordHashed = md5($rawPassword);
 
-      // Simpan user
       $ins = $db->prepare("INSERT INTO saw_users (username, password, role) VALUES (?, ?, ?)");
       $ins->bind_param("sss", $username, $passwordHashed, $role);
 
       if ($ins->execute()) {
         $ins->close();
-        // redirect ke list dengan pesan sukses (header redirect lebih baik)
-        header("Location: list-user.php?msg=" . urlencode("User berhasil dibuat"));
+        header("Location: list-user.php?msg=User berhasil ditambahkan&type=success");
         exit;
       } else {
-        $errors[] = "Gagal menyimpan user (DB error).";
-        $ins->close();
+        $errors[] = "Gagal menyimpan user.";
       }
+      $ins->close();
     }
   }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <?php require "../layout/head.php"; ?>
@@ -73,22 +87,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <?php endif; ?>
 
         <div class="card p-4 mt-3">
-          <form method="POST" novalidate>
+          <form method="POST">
             <div class="mb-3">
               <label class="form-label">Username</label>
-              <input type="text" name="username" class="form-control" required value="<?= isset($username) ? htmlspecialchars($username) : '' ?>">
+              <input type="text" name="username" class="form-control"
+                value="<?= isset($username) ? htmlspecialchars($username) : '' ?>">
             </div>
 
             <div class="mb-3">
               <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control" required>
-              <div class="form-text">Password akan disimpan aman (hashed).</div>
+              <input type="password" name="password" class="form-control">
+              <div class="form-text">
+                Minimal 5 karakter dan harus mengandung karakter spesial.
+              </div>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Role</label>
-              <select name="role" class="form-control" required>
-                <option value="" selected>-- pilih role --</option>
+              <select name="role" class="form-control">
+                <option value="">-- pilih role --</option>
                 <option value="admin">Admin</option>
                 <option value="quality_control">Quality Control</option>
                 <option value="manager">Manager</option>
