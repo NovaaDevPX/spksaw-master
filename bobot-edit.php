@@ -1,5 +1,6 @@
 <?php
 require "include/conn.php";
+require "include/notification-helper.php";
 
 // Jika form disubmit
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -30,13 +31,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
   }
 
-  echo "<script>alert('Bobot kriteria berhasil diperbarui!'); window.location='bobot.php';</script>";
+  /* ===========================
+     NOTIFIKASI
+  =========================== */
+  $title = "Bobot Kriteria Diperbarui";
+  $message = "Bobot kriteria telah diperbarui atau ditambahkan.";
+
+  // kirim ke admin
+  createNotification($db, $title, $message, "admin", null);
+
+  // kirim ke quality_control
+  createNotification($db, $title, $message, "quality_control", null);
+
+  header("Location: bobot.php?msg=Bobot berhasil diperbarui&type=success");
   exit;
 }
 
 // Ambil data
 $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
