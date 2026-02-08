@@ -2,23 +2,36 @@
 require "include/conn.php";
 require "include/notification-helper.php";
 
-// Jika form disubmit
+/* =========================
+   PROSES SIMPAN
+========================= */
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-  foreach ($_POST["criteria"] as $index => $criteria) {
+  /* ===== HAPUS DATA ===== */
+  if (!empty($_POST['delete_id'])) {
+    foreach ($_POST['delete_id'] as $delId) {
+      $delId = (int)$delId;
+      $db->query("DELETE FROM saw_criterias WHERE id_criteria = $delId");
+    }
+  }
 
-    $criteria = $db->real_escape_string($criteria);
-    $weight = floatval($_POST["weight"][$index]);
-    $attribute = $db->real_escape_string($_POST["attribute"][$index]);
+  /* ===== SIMPAN & UPDATE ===== */
+  foreach ($_POST["criteria"] as $i => $criteria) {
 
-    // UPDATE
-    if (!empty($_POST["id"][$index])) {
-      $id = intval($_POST["id"][$index]);
+    if (trim($criteria) === "") continue;
 
+    $criteria  = $db->real_escape_string($criteria);
+    $weight    = floatval($_POST["weight"][$i]);
+    $attribute = $db->real_escape_string($_POST["attribute"][$i]);
+    $id        = $_POST["id"][$i];
+
+    if (!empty($id)) {
+      // UPDATE
+      $id = (int)$id;
       $db->query("
         UPDATE saw_criterias SET
-          criteria = '$criteria',
-          weight = '$weight',
+          criteria  = '$criteria',
+          weight    = '$weight',
           attribute = '$attribute'
         WHERE id_criteria = $id
       ");
@@ -31,33 +44,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
   }
 
-  /* ===========================
-     NOTIFIKASI
-  =========================== */
-  $title = "Bobot Kriteria Diperbarui";
-  $message = "Bobot kriteria telah diperbarui atau ditambahkan.";
+  /* ===== NOTIFIKASI ===== */
+  createNotification($db, "Bobot Diperbarui", "Bobot kriteria berhasil diperbarui", "admin", null);
+  createNotification($db, "Bobot Diperbarui", "Bobot kriteria berhasil diperbarui", "quality_control", null);
 
-  // kirim ke admin
-  createNotification($db, $title, $message, "admin", null);
-
-  // kirim ke quality_control
-  createNotification($db, $title, $message, "quality_control", null);
-
-  header("Location: bobot.php?msg=Bobot berhasil diperbarui&type=success");
+  header("Location: bobot.php?msg=Berhasil diperbarui&type=success");
   exit;
 }
 
-// Ambil data
+/* =========================
+   DATA
+========================= */
 $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 <?php require "layout/head.php"; ?>
 
 <body>
-
   <div id="app">
     <?php require "layout/sidebar.php"; ?>
 
@@ -74,11 +79,10 @@ $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
             <form method="POST">
               <div class="card">
 
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between">
                   <h4 class="card-title">Edit & Tambah Kriteria</h4>
-
                   <button type="button" id="addRow" class="btn btn-success btn-sm">
-                    <i class="bi bi-plus-lg"></i> Tambah Baris
+                    <i class="bi bi-plus-lg"></i> Tambah
                   </button>
                 </div>
 
@@ -87,20 +91,19 @@ $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
                   <table class="table table-bordered" id="criteriaTable">
                     <thead>
                       <tr>
-                        <th>No</th>
+                        <th width="50">No</th>
                         <th>Kriteria</th>
-                        <th>Bobot</th>
-                        <th>Atribut</th>
+                        <th width="120">Bobot</th>
+                        <th width="120">Atribut</th>
+                        <th width="80">Aksi</th>
                       </tr>
                     </thead>
 
                     <tbody>
-                      <?php
-                      $no = 1;
-                      while ($row = $result->fetch_object()):
-                      ?>
+                      <?php $no = 1;
+                      while ($row = $result->fetch_object()): ?>
                         <tr>
-                          <td><?= $no ?></td>
+                          <td class="row-no"><?= $no++ ?></td>
 
                           <td>
                             <input type="hidden" name="id[]" value="<?= $row->id_criteria ?>">
@@ -109,7 +112,8 @@ $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
                           </td>
 
                           <td>
-                            <input type="number" step="0.01" name="weight[]" class="form-control weight-input"
+                            <input type="number" step="0.01" name="weight[]"
+                              class="form-control weight-input"
                               value="<?= $row->weight ?>" required>
                           </td>
 
@@ -119,20 +123,24 @@ $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
                               <option value="cost" <?= $row->attribute == "cost" ? "selected" : "" ?>>Cost</option>
                             </select>
                           </td>
+
+                          <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm removeRow">
+                              Hapus
+                            </button>
+                          </td>
                         </tr>
-                      <?php
-                        $no++;
-                      endwhile;
-                      ?>
+                      <?php endwhile; ?>
                     </tbody>
                   </table>
 
-                  <!-- Live total bobot info -->
-                  <div id="weightInfo" class="mt-2 fw-bold"></div>
+                  <input type="hidden" name="delete_id[]" id="deleteContainer">
+
+                  <div id="weightInfo" class="fw-bold mt-2"></div>
 
                   <div class="text-end mt-3">
                     <a href="bobot.php" class="btn btn-secondary">Kembali</a>
-                    <button type="submit" id="submitBtn" class="btn btn-primary">Simpan Perubahan</button>
+                    <button class="btn btn-primary" id="submitBtn">Simpan</button>
                   </div>
 
                 </div>
@@ -144,77 +152,97 @@ $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
       </div>
 
       <?php require "layout/footer.php"; ?>
-
     </div>
   </div>
 
   <?php require "layout/js.php"; ?>
 
-  <!-- Script Validasi Live -->
   <script>
-    // Tambah baris baru
-    document.getElementById("addRow").addEventListener("click", function() {
-      let table = document.querySelector("#criteriaTable tbody");
-      let rowCount = table.rows.length + 1;
+    const tableBody = document.querySelector("#criteriaTable tbody");
+    let deletedIds = [];
 
-      let newRow = `
-        <tr>
-          <td>${rowCount}</td>
-          <td>
-            <input type="hidden" name="id[]" value="">
-            <input type="text" name="criteria[]" class="form-control" placeholder="Nama Kriteria" required>
-          </td>
-          <td>
-            <input type="number" step="0.01" name="weight[]" class="form-control weight-input" placeholder="0.00" required>
-          </td>
-          <td>
-            <select name="attribute[]" class="form-control">
-              <option value="benefit">Benefit</option>
-              <option value="cost">Cost</option>
-            </select>
-          </td>
-        </tr>
-      `;
+    /* ===== TAMBAH BARIS ===== */
+    document.getElementById("addRow").addEventListener("click", () => {
+      tableBody.insertAdjacentHTML("beforeend", `
+  <tr>
+    <td class="row-no"></td>
+    <td>
+      <input type="hidden" name="id[]" value="">
+      <input type="text" name="criteria[]" class="form-control" required>
+    </td>
+    <td>
+      <input type="number" step="0.01" name="weight[]" class="form-control weight-input" required>
+    </td>
+    <td>
+      <select name="attribute[]" class="form-control">
+        <option value="benefit">Benefit</option>
+        <option value="cost">Cost</option>
+      </select>
+    </td>
+    <td class="text-center">
+      <button type="button" class="btn btn-danger btn-sm removeRow">
+        <i class="bi bi-dash-lg"></i>
+      </button>
+    </td>
+  </tr>
+  `);
 
-      table.insertAdjacentHTML("beforeend", newRow);
-
-      attachWeightListener();
+      refreshRowNumber();
+      attachEvents();
     });
 
-    // Hitung total bobot
-    function calculateTotal() {
-      let weights = document.querySelectorAll(".weight-input");
-      let total = 0;
+    /* ===== HAPUS BARIS ===== */
+    function attachEvents() {
+      document.querySelectorAll(".removeRow").forEach(btn => {
+        btn.onclick = function() {
+          const row = this.closest("tr");
+          const idInput = row.querySelector('input[name="id[]"]');
 
-      weights.forEach(w => {
-        let val = parseFloat(w.value);
-        if (!isNaN(val)) total += val;
+          if (idInput && idInput.value !== "") {
+            deletedIds.push(idInput.value);
+          }
+
+          row.remove();
+          refreshRowNumber();
+          calculateTotal();
+          document.getElementById("deleteContainer").value = deletedIds;
+        };
       });
 
-      total = total.toFixed(2);
+      document.querySelectorAll(".weight-input").forEach(w => {
+        w.oninput = calculateTotal;
+      });
+    }
+
+    /* ===== NOMOR ULANG ===== */
+    function refreshRowNumber() {
+      document.querySelectorAll(".row-no").forEach((td, i) => {
+        td.innerText = i + 1;
+      });
+    }
+
+    /* ===== TOTAL BOBOT ===== */
+    function calculateTotal() {
+      let total = 0;
+      document.querySelectorAll(".weight-input").forEach(w => {
+        let v = parseFloat(w.value);
+        if (!isNaN(v)) total += v;
+      });
 
       const info = document.getElementById("weightInfo");
-      const submitBtn = document.getElementById("submitBtn");
+      const btn = document.getElementById("submitBtn");
 
+      total = total.toFixed(2);
       if (total == 100) {
-        info.innerHTML = `<span class="text-success">Total Bobot: ${total} ✔️ (Valid)</span>`;
-        submitBtn.disabled = false;
+        info.innerHTML = `<span class="text-success">Total Bobot: ${total} ✔</span>`;
+        btn.disabled = false;
       } else {
-        info.innerHTML = `<span class="text-danger">Total Bobot: ${total} ❌ (Harus 100)</span>`;
-        submitBtn.disabled = true;
+        info.innerHTML = `<span class="text-danger">Total Bobot: ${total} ❌ (harus 100)</span>`;
+        btn.disabled = true;
       }
     }
 
-    // Pasang event listener ke semua input bobot
-    function attachWeightListener() {
-      document.querySelectorAll(".weight-input").forEach(input => {
-        input.removeEventListener("input", calculateTotal);
-        input.addEventListener("input", calculateTotal);
-      });
-    }
-
-    // Pertama kali load
-    attachWeightListener();
+    attachEvents();
     calculateTotal();
   </script>
 
