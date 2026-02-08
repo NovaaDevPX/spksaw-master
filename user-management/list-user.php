@@ -1,15 +1,58 @@
 <?php
+session_start();
+
 require "../include/conn.php";
+require "../include/notification-helper.php";
+
+// Proteksi login
+if (!isset($_SESSION['id_user'])) {
+  header("Location: ../auth/login.php");
+  exit;
+}
 
 // Hapus user
 if (isset($_GET["delete"])) {
   $id = intval($_GET["delete"]);
 
-  if ($db->query("DELETE FROM saw_users WHERE id_user = $id")) {
-    header("Location: list-user.php?msg=User berhasil dihapus&type=success");
+  // Ambil data user sebelum dihapus
+  $stmt = $db->prepare("SELECT username, role FROM saw_users WHERE id_user = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $user = $result->fetch_assoc();
+  $stmt->close();
+
+  if ($user) {
+    $username = $user['username'];
+    $role = $user['role'];
+
+    // Proses hapus
+    if ($db->query("DELETE FROM saw_users WHERE id_user = $id")) {
+
+      /* ===========================
+         NOTIFIKASI
+      =========================== */
+      $title = "User Dihapus";
+      $message = "
+User <b>$username</b> dengan role <b>$role</b> telah dihapus.
+      ";
+
+      createNotification(
+        $db,
+        $title,
+        $message,
+        'admin', // notifikasi ke semua admin
+        null
+      );
+
+      header("Location: list-user.php?msg=User berhasil dihapus&type=success");
+    } else {
+      header("Location: list-user.php?msg=Gagal menghapus user&type=danger");
+    }
   } else {
-    header("Location: list-user.php?msg=Gagal menghapus user&type=danger");
+    header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
   }
+
   exit;
 }
 ?>

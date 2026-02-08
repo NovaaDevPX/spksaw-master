@@ -69,6 +69,57 @@ CREATE TABLE `saw_users` (
   PRIMARY KEY (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- ===========================
+-- TABLE: saw_notifications
+-- ===========================
+CREATE TABLE `saw_notifications` (
+  `id_notification` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(100) NOT NULL,
+  `message` TEXT NOT NULL,
+
+  -- user yang membuat notifikasi
+  `created_by` INT NOT NULL,
+
+  -- jika NULL → notifikasi global
+  `target_role` ENUM('admin','manager','mitra','quality_control') DEFAULT NULL,
+
+  -- jika NULL → untuk semua user
+  `target_user_id` INT DEFAULT NULL,
+
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  KEY `idx_target_role` (`target_role`),
+  KEY `idx_target_user` (`target_user_id`),
+  KEY `idx_created_by` (`created_by`),
+
+  CONSTRAINT `fk_notification_creator`
+    FOREIGN KEY (`created_by`) REFERENCES `saw_users` (`id_user`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+-- ===========================
+-- TABLE: saw_notification_reads
+-- ===========================
+CREATE TABLE `saw_notification_reads` (
+  `id_read` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_notification` INT NOT NULL,
+  `id_user` INT NOT NULL,
+  `is_read` TINYINT(1) DEFAULT 0,
+  `read_at` DATETIME DEFAULT NULL,
+
+  UNIQUE KEY `unique_user_notification` (`id_notification`, `id_user`),
+
+  CONSTRAINT `fk_read_notification`
+    FOREIGN KEY (`id_notification`) REFERENCES `saw_notifications` (`id_notification`)
+    ON DELETE CASCADE,
+
+  CONSTRAINT `fk_read_user`
+    FOREIGN KEY (`id_user`) REFERENCES `saw_users` (`id_user`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
 -- DATA USER
 INSERT INTO `saw_users` (`username`, `password`, `role`) VALUES
 ('admin', MD5('admin'), 'admin'),

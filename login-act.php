@@ -28,6 +28,7 @@ if ($result && $result->num_rows === 1) {
   // Verifikasi password (gunakan MD5 seperti data yang ada)
   if (md5($password) === $data['password']) {
     // Set session
+    $_SESSION['id_user'] = $data['id_user'];
     $_SESSION['username'] = $data['username'];
     $_SESSION['role'] = $data['role'];
     $_SESSION['status'] = "login";

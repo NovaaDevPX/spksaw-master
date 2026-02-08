@@ -1,7 +1,16 @@
 <?php
+session_start();
+
 require "../include/conn.php";
+require "../include/notification-helper.php";
 
 $errors = [];
+
+// Proteksi login
+if (!isset($_SESSION['id_user'])) {
+  header("Location: ../auth/login.php");
+  exit;
+}
 
 // Ambil ID dari URL
 if (!isset($_GET['id'])) {
@@ -22,6 +31,10 @@ if (!$user) {
   header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
   exit;
 }
+
+// Simpan data lama untuk notifikasi
+$oldUsername = $user['username'];
+$oldRole = $user['role'];
 
 // Proses update
 if (isset($_POST['update'])) {
@@ -75,6 +88,24 @@ if (isset($_POST['update'])) {
     }
 
     if ($stmt->execute()) {
+
+      /* ===========================
+         NOTIFIKASI
+      =========================== */
+      $title = "User Diupdate";
+
+      $message = "User <b>$oldUsername</b> telah diupdate:
+      - Username baru: <b>$username</b>
+      - Role baru: <b>$role</b> ";
+
+      createNotification(
+        $db,
+        $title,
+        $message,
+        'admin', // target semua admin
+        null
+      );
+
       $stmt->close();
       header("Location: list-user.php?msg=User berhasil diupdate&type=success");
       exit;
