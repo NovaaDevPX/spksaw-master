@@ -1,5 +1,6 @@
 <?php
 require "include/conn.php";
+require "include/notification-helper.php";
 
 // helper to redirect back to matrik with optional message
 function back($msg = '', $type = '', $year = '', $period = '')
@@ -57,6 +58,19 @@ $affected = $stmt->affected_rows;
 $stmt->close();
 
 if ($affected > 0) {
+
+  /* ===========================
+     NOTIFIKASI
+  =========================== */
+  $title = "Data Penilaian Dihapus";
+  $message = "Data penilaian alternatif ID $id pada periode $period telah dihapus.";
+
+  // kirim ke admin
+  createNotification($db, $title, $message, "admin", null);
+
+  // kirim ke quality control
+  createNotification($db, $title, $message, "quality_control", null);
+
   back("Data berhasil dihapus untuk periode {$period}.", "success", $year, $period);
 } else {
   back("Tidak ada data yang ditemukan untuk dihapus pada periode {$period}.", "warning", $year, $period);

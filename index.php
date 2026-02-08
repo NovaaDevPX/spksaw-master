@@ -1,3 +1,35 @@
+<?php
+require "include/conn.php";
+require "include/notification-helper.php";
+
+if (!isset($_SESSION['id_user']) || !isset($_SESSION['role'])) {
+  header("Location: login.php");
+  exit;
+}
+
+$userId = $_SESSION['id_user'];
+$userRole = $_SESSION['role'];
+
+// ambil notifikasi user
+$notifications = getUserNotifications($db, $userId, $userRole);
+
+// simpan maksimal 5 notifikasi terbaru
+$notifList = [];
+$count = 0;
+
+while ($row = $notifications->fetch_assoc()) {
+  if ($count < 5) {
+    $notifList[] = $row;
+
+    // jika belum dibaca → tandai dibaca
+    if (!$row['is_read']) {
+      markNotificationAsRead($db, $row['id_notification'], $userId);
+    }
+  }
+  $count++;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -130,6 +162,67 @@
                     3 = Cukup |
                     4 = Baik |
                     5 = Sangat Baik
+                  </div>
+                </div>
+
+                <!-- NOTIFIKASI -->
+                <div class="col-12">
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+
+                      <h5 class="fw-bold mb-3">
+                        <i class="bi bi-bell-fill text-danger me-2"></i>
+                        Notifikasi Terbaru
+                      </h5>
+
+                      <?php if (count($notifList) > 0): ?>
+                        <div class="list-group">
+
+                          <?php foreach ($notifList as $n): ?>
+                            <div class="list-group-item list-group-item-action mb-2 rounded shadow-sm">
+
+                              <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                  <h6 class="mb-1 fw-bold">
+                                    <?= htmlspecialchars($n['title']) ?>
+                                  </h6>
+
+                                  <small class="text-muted">
+                                    <?= nl2br(htmlspecialchars($n['message'])) ?>
+                                  </small>
+
+                                  <div class="mt-2">
+                                    <small class="text-muted">
+                                      <i class="bi bi-person"></i>
+                                      <?= htmlspecialchars($n['created_by_name']) ?>
+                                      •
+                                      <i class="bi bi-clock"></i>
+                                      <?= date("d M Y H:i", strtotime($n['created_at'])) ?>
+                                    </small>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <?php if ($n['is_read']): ?>
+                                    <span class="badge bg-secondary">Dibaca</span>
+                                  <?php else: ?>
+                                    <span class="badge bg-danger">Baru</span>
+                                  <?php endif; ?>
+                                </div>
+                              </div>
+
+                            </div>
+                          <?php endforeach; ?>
+
+                        </div>
+                      <?php else: ?>
+                        <div class="alert alert-light text-center">
+                          <i class="bi bi-bell-slash"></i>
+                          Tidak ada notifikasi.
+                        </div>
+                      <?php endif; ?>
+
+                    </div>
                   </div>
                 </div>
 

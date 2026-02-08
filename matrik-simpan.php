@@ -1,5 +1,6 @@
 <?php
 require "include/conn.php";
+require "include/notification-helper.php";
 
 $id_alternative = $_POST['id_alternative'];
 $id_criteria    = $_POST['id_criteria'];
@@ -48,6 +49,19 @@ $sql = "
 $result = $db->query($sql);
 
 if ($result === true) {
+
+  /* ===========================
+     NOTIFIKASI
+  =========================== */
+  $title = "Penilaian Baru Ditambahkan";
+  $message = "Nilai alternatif ID $id_alternative untuk kriteria ID $id_criteria pada periode $period telah ditambahkan.";
+
+  // ke admin
+  createNotification($db, $title, $message, "admin", null);
+
+  // ke quality control
+  createNotification($db, $title, $message, "quality_control", null);
+
   header("Location: matrik.php?year=$year&period=$period&msg=Data berhasil disimpan!&type=success");
 } else {
   header("Location: matrik.php?year=$year&period=$period&msg=Terjadi kesalahan server!&type=error");
