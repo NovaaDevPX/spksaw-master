@@ -96,132 +96,68 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
 <!DOCTYPE html>
-<html lang="id">
-<?php require "../layout/head.php"; ?>
+< lang="id">
+  <?php require "../layout/head.php"; ?>
 
-<body>
-  <div id="app">
-    <?php require "../layout/sidebar.php"; ?>
+  <body>
+    <div id="app">
+      <?php require "../layout/sidebar.php"; ?>
 
-    <div id="main" class="py-4">
-      <div class="container">
-        <h3>Tambah User</h3>
+      <div id="main" class="py-4">
+        <div class="container">
+          <h3>Tambah User</h3>
 
-        <?php if (!empty($errors)): ?>
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              <?php foreach ($errors as $e): ?>
-                <li><?= htmlspecialchars($e) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <div class="card p-4 mt-3">
-          <form method="POST">
-            <div class="mb-3">
-              <label class="form-label">Username</label>
-              <input
-                type="text"
-                name="username"
-                class="form-control"
-                value="<?= isset($username) ? htmlspecialchars($username) : '' ?>">
+          <?php if (!empty($errors)): ?>
+            <div class="alert alert-danger">
+              <ul class="mb-0">
+                <?php foreach ($errors as $e): ?>
+                  <li><?= htmlspecialchars($e) ?></li>
+                <?php endforeach; ?>
+              </ul>
             </div>
+          <?php endif; ?>
 
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control">
-              <div class="form-text">
-                Minimal 5 karakter dan harus mengandung karakter spesial.
+          <div class="card p-4 mt-3">
+            <form method="POST">
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  class="form-control"
+                  value="<?= isset($username) ? htmlspecialchars($username) : '' ?>">
               </div>
-            </div>
 
-            <div class="mb-3">
-              <label class="form-label">Role</label>
-              <select name="role" class="form-control">
-                <option value="">-- pilih role --</option>
-                <option value="admin">Admin</option>
-                <option value="quality_control">Quality Control</option>
-                <option value="manager">Manager</option>
-                <option value="mitra">Mitra</option>
-              </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <a href="list-user.php" class="btn btn-secondary">Kembali</a>
-          </form>
-        </div>
-      </div>
-
-      <?php require "../layout/footer.php"; ?>
-    </div>
-  </div>
-
-  <?php require "../layout/js.php"; ?>
-</body>
-
-</html>
-
-<!DOCTYPE html>
-<html lang="id">
-<?php require "../layout/head.php"; ?>
-
-<body>
-  <div id="app">
-    <?php require "../layout/sidebar.php"; ?>
-
-    <div id="main" class="py-4">
-      <div class="container">
-        <h3>Tambah User</h3>
-
-        <?php if (!empty($errors)): ?>
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              <?php foreach ($errors as $e): ?>
-                <li><?= htmlspecialchars($e) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <div class="card p-4 mt-3">
-          <form method="POST">
-            <div class="mb-3">
-              <label class="form-label">Username</label>
-              <input type="text" name="username" class="form-control"
-                value="<?= isset($username) ? htmlspecialchars($username) : '' ?>">
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control">
-              <div class="form-text">
-                Minimal 5 karakter dan harus mengandung karakter spesial.
+              <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control">
+                <div class="form-text">
+                  Minimal 5 karakter dan harus mengandung karakter spesial.
+                </div>
               </div>
-            </div>
 
-            <div class="mb-3">
-              <label class="form-label">Role</label>
-              <select name="role" class="form-control">
-                <option value="">-- pilih role --</option>
-                <option value="admin">Admin</option>
-                <option value="quality_control">Quality Control</option>
-                <option value="manager">Manager</option>
-                <option value="mitra">Mitra</option>
-              </select>
-            </div>
+              <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-control">
+                  <option value="">-- pilih role --</option>
+                  <option value="admin">Admin</option>
+                  <option value="quality_control">Quality Control</option>
+                  <option value="manager">Manager</option>
+                  <option value="mitra">Mitra</option>
+                </select>
+              </div>
 
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <a href="list-user.php" class="btn btn-secondary">Kembali</a>
-          </form>
+              <button type="submit" class="btn btn-primary">Simpan</button>
+              <a href="list-user.php" class="btn btn-secondary">Kembali</a>
+            </form>
+          </div>
         </div>
+
+        <?php require "../layout/footer.php"; ?>
       </div>
-
-      <?php require "../layout/footer.php"; ?>
     </div>
-  </div>
 
-  <?php require "../layout/js.php"; ?>
-</body>
+    <?php require "../layout/js.php"; ?>
+  </body>
 
-</html>
+  </html>
