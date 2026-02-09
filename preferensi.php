@@ -117,30 +117,6 @@ if ($period !== 'all') {
                             </tr>
                           </tbody>
                         </table>
-
-                        <p>
-                          Dengan Nilai Per Kriteria sebagai berikut:
-                        </p>
-
-                        <table class="table table-bordered">
-                          <thead class="table-light">
-                            <tr>
-                              <th>Kriteria</th>
-                              <th>Nilai</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php
-                            $rank1Id = $narasi['rank1']['id'];
-                            $rank1Data = getNilaiPerKriteria($values, $rank1Id, $krit);
-                            foreach ($rank1Data as $k => $v): ?>
-                              <tr>
-                                <td><?= htmlspecialchars($k) ?></td>
-                                <td><?= $v ?></td>
-                              </tr>
-                            <?php endforeach; ?>
-                          </tbody>
-                        </table>
                       </div>
                     </div>
 
@@ -233,30 +209,6 @@ if ($period !== 'all') {
                                       <td><?= htmlspecialchars($narasiP['rank1']['name']) ?></td>
                                       <td><?= $narasiP['rank1']['nilai'] ?></td>
                                     </tr>
-                                  </tbody>
-                                </table>
-
-                                <p>
-                                  Dengan Nilai Per Kriteria sebagai berikut:
-                                </p>
-
-                                <table class="table table-sm table-bordered">
-                                  <thead class="table-light">
-                                    <tr>
-                                      <th>Kriteria</th>
-                                      <th>Nilai</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <?php
-                                    $rank1Id = $narasiP['rank1']['id'];
-                                    $rank1Data = getNilaiPerKriteria($valuesP, $rank1Id, $krit);
-                                    foreach ($rank1Data as $k => $v): ?>
-                                      <tr>
-                                        <td><?= htmlspecialchars($k) ?></td>
-                                        <td><?= $v ?></td>
-                                      </tr>
-                                    <?php endforeach; ?>
                                   </tbody>
                                 </table>
                               </div>
