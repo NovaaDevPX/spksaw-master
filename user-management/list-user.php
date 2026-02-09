@@ -45,12 +45,12 @@ User <b>$username</b> dengan role <b>$role</b> telah dihapus.
         null
       );
 
-      header("Location: list-user.php?msg=User berhasil dihapus&type=success");
+      header("Location: list-user.php?success=deleted");
     } else {
-      header("Location: list-user.php?msg=Gagal menghapus user&type=danger");
+      header("Location: list-user.php?error=failed");
     }
   } else {
-    header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
+    header("Location: list-user.php?error=user_not_found");
   }
 
   exit;
@@ -63,6 +63,7 @@ User <b>$username</b> dengan role <b>$role</b> telah dihapus.
 
 <body>
   <div id="app">
+    <?php include "../include/notification.php"; ?>
     <?php require "../layout/sidebar.php"; ?>
 
     <div id="main" class="py-4">

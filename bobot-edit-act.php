@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $attribute = trim($_POST['attribute']);
 
   if ($id <= 0 || $criteria === '') {
-    header("Location: ./bobot.php?msg=Data tidak valid&type=danger");
+    header("Location: ./bobot.php?error=invalid_data");
     exit;
   }
 
@@ -36,10 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // kirim ke quality_control
     createNotification($db, $title, $message, "quality_control", null);
 
-    header("Location: ./bobot.php?msg=Bobot berhasil diupdate&type=success");
+    header("Location: ./bobot.php?success=updated");
     exit;
   } else {
-    header("Location: ./bobot.php?msg=Gagal update bobot&type=danger");
+    header("Location: ./bobot.php?error=failed");
     exit;
   }
 }

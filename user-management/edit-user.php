@@ -14,7 +14,7 @@ if (!isset($_SESSION['id_user'])) {
 
 // Ambil ID dari URL
 if (!isset($_GET['id'])) {
-  header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
+  header("Location: list-user.php?error=user_not_found");
   exit;
 }
 
@@ -28,7 +28,7 @@ $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$user) {
-  header("Location: list-user.php?msg=User tidak ditemukan&type=danger");
+  header("Location: list-user.php?error=user_not_found");
   exit;
 }
 
@@ -107,7 +107,7 @@ if (isset($_POST['update'])) {
       );
 
       $stmt->close();
-      header("Location: list-user.php?msg=User berhasil diupdate&type=success");
+      header("Location: list-user.php?success=updated");
       exit;
     } else {
       $errors[] = "Gagal mengupdate user.";

@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   createNotification($db, "Bobot Diperbarui", "Bobot kriteria berhasil diperbarui", "admin", null);
   createNotification($db, "Bobot Diperbarui", "Bobot kriteria berhasil diperbarui", "quality_control", null);
 
-  header("Location: bobot.php?msg=Berhasil diperbarui&type=success");
+  header("Location: bobot.php?success=updated");
   exit;
 }
 
@@ -64,6 +64,7 @@ $result = $db->query("SELECT * FROM saw_criterias ORDER BY id_criteria ASC");
 
 <body>
   <div id="app">
+    <?php include "include/notification.php"; ?>
     <?php require "layout/sidebar.php"; ?>
 
     <div id="main">

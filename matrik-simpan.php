@@ -12,13 +12,13 @@ $year = substr($period, 0, 4);
 
 // Validasi nilai
 if ($value < 0 || $value > 5) {
-  header("Location: matrik.php?year=$year&period=$period&msg=Nilai harus antara 0 sampai 5!&type=warning");
+  header("Location: matrik.php?year=$year&period=$period&error=invalid_data");
   exit;
 }
 
 // Validasi period
 if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period)) {
-  header("Location: matrik.php?msg=Periode tidak valid!&type=error");
+  header("Location: matrik.php?error=invalid_period");
   exit;
 }
 
@@ -34,7 +34,7 @@ $checkQuery = "
 $checkResult = $db->query($checkQuery);
 
 if ($checkResult->num_rows > 0) {
-  header("Location: matrik.php?year=$year&period=$period&msg=Data sudah ada untuk periode ini!&type=warning");
+  header("Location: matrik.php?year=$year&period=$period&error=data_exists");
   exit;
 }
 
@@ -62,9 +62,9 @@ if ($result === true) {
   // ke quality control
   createNotification($db, $title, $message, "quality_control", null);
 
-  header("Location: matrik.php?year=$year&period=$period&msg=Data berhasil disimpan!&type=success");
+  header("Location: matrik.php?year=$year&period=$period&success=added");
 } else {
-  header("Location: matrik.php?year=$year&period=$period&msg=Terjadi kesalahan server!&type=error");
+  header("Location: matrik.php?year=$year&period=$period&error=failed");
 }
 
 exit;

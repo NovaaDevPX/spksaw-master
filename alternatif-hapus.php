@@ -45,14 +45,14 @@ if (isset($_GET['id'])) {
         null
       );
 
-      header("Location: ./alternatif.php?status=deleted");
+      header("Location: ./alternatif.php?success=deleted");
       exit;
     } else {
-      header("Location: ./alternatif.php?status=error");
+      header("Location: ./alternatif.php?error=failed");
       exit;
     }
   } else {
-    header("Location: ./alternatif.php?status=notfound");
+    header("Location: ./alternatif.php?error=notfound");
     exit;
   }
 } else {

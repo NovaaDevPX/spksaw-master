@@ -40,14 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         null
       );
 
-      header("Location: ./alternatif.php?status=success");
+      header("Location: ./alternatif.php?success=added");
       exit;
     } else {
-      header("Location: ./alternatif.php?status=error");
+      header("Location: ./alternatif.php?error=failed");
       exit;
     }
   } else {
-    header("Location: ./alternatif.php?status=empty");
+    header("Location: ./alternatif.php?error=empty");
     exit;
   }
 }

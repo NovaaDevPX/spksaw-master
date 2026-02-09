@@ -11,6 +11,7 @@ $row = $result->fetch_array();
 
 <body>
   <div id="app">
+    <?php include "include/notification.php"; ?>
     <?php require "layout/sidebar.php"; ?>
     <div id="main">
       <header class="mb-3">

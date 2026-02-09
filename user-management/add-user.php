@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         );
 
         $ins->close();
-        header("Location: list-user.php?msg=User berhasil ditambahkan&type=success");
+        header("Location: list-user.php?success=added");
         exit;
       } else {
         $errors[] = "Gagal menyimpan user.";

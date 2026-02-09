@@ -6,6 +6,7 @@ require "include/conn.php";
 ?>
 
 <body>
+  <?php include "include/notification.php"; ?>
   <div id="app">
     <?php require "layout/sidebar.php"; ?>
     <div id="main">

@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $name = trim($_POST['name']);
 
   if ($id <= 0 || $name === '') {
-    header("Location: ./alternatif.php?status=error");
+    header("Location: ./alternatif.php?error=invalid_data");
     exit;
   }
 
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $oldData = $resultOld->fetch_assoc();
 
   if (!$oldData) {
-    header("Location: ./alternatif.php?status=notfound");
+    header("Location: ./alternatif.php?error=notfound");
     exit;
   }
 
@@ -56,10 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       null
     );
 
-    header("Location: ./alternatif.php?status=updated");
+    header("Location: ./alternatif.php?success=updated");
     exit;
   } else {
-    header("Location: ./alternatif.php?status=error");
+    header("Location: ./alternatif.php?error=failed");
     exit;
   }
 }

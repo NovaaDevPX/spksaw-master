@@ -24,6 +24,7 @@ require "include/nama-bulan.php";
 
 <body>
   <div id="app">
+    <?php include "include/notification.php"; ?>
     <?php require "layout/sidebar.php"; ?>
     <div id="main">
 
