@@ -79,6 +79,14 @@ if ($period !== 'all') {
                 </form>
               <?php endif; ?>
 
+              <div class="d-flex justify-content-end" style="margin-bottom: 20px;">
+                <a href="export-preferensi.php?period=<?= $period ?>"
+                  class="btn btn-success btn-sm m-2 shadow-sm d-flex align-items-center gap-2 export-btn"
+                  target="_blank">
+                  <span>Export PDF</span>
+                </a>
+              </div>
+
               <!-- SINGLE PERIODE -->
               <?php if ($period !== 'all'):
                 list($values, $alternatif) = getEvaluasi($db, $period);
