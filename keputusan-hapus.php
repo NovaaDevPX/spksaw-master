@@ -2,76 +2,121 @@
 require "include/conn.php";
 require "include/notification-helper.php";
 
-// helper to redirect back to matrik with optional message
-function back($msg = '', $type = '', $year = '', $period = '')
-{
-  $url = 'matrik.php';
-  $params = [];
-  if ($type !== '') $params['type'] = $type;
-  if ($msg !== '') $params['msg'] = $msg;
-  if ($year !== '') $params['year'] = $year;
-  if ($period !== '') $params['period'] = $period;
-  if (!empty($params)) $url .= '?' . http_build_query($params);
-  header("Location: $url");
+// ============================
+// VALIDASI PARAMETER
+// ============================
+
+if (!isset($_GET['id'])) {
+  header("Location: matrik.php?error=invalid_id");
   exit;
 }
 
-// pastikan param id ada
-if (!isset($_GET['id'])) {
-  back("Parameter id tidak ditemukan.", "error");
-}
-
-// ambil dan validasi id
 $id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
 if ($id === false || $id <= 0) {
-  back("ID alternatif tidak valid.", "error");
+  header("Location: matrik.php?error=invalid_id");
+  exit;
 }
 
-// pastikan period ada
 if (!isset($_GET['period']) || trim($_GET['period']) === '') {
-  back("Parameter periode tidak ditemukan.", "error");
+  header("Location: matrik.php?error=invalid_period");
+  exit;
 }
 
 $period = trim($_GET['period']);
 
-// validasi format period (harus YYYY-MM)
 if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period)) {
-  back("Periode tidak valid. Gunakan format YYYY-MM.", "error");
+  header("Location: matrik.php?error=invalid_period");
+  exit;
 }
 
 $year = substr($period, 0, 4);
 
-// gunakan prepared statement untuk hapus
-$stmt = $db->prepare("DELETE FROM saw_evaluations WHERE id_alternative = ? AND period = ?");
-if ($stmt === false) {
-  back("Gagal menyiapkan query hapus.", "error", $year, $period);
+// ============================
+// AMBIL DETAIL ALTERNATIF
+// ============================
+
+$altStmt = $db->prepare("
+  SELECT name 
+  FROM saw_alternatives 
+  WHERE id_alternative = ?
+");
+
+if (!$altStmt) {
+  header("Location: matrik.php?year=$year&period=$period&error=failed");
+  exit;
+}
+
+$altStmt->bind_param("i", $id);
+$altStmt->execute();
+$altResult = $altStmt->get_result();
+$alternative = $altResult->fetch_assoc();
+$altStmt->close();
+
+$alternativeName = $alternative['name'] ?? "ID $id";
+
+// ============================
+// HAPUS DATA
+// ============================
+
+$stmt = $db->prepare("
+  DELETE FROM saw_evaluations 
+  WHERE id_alternative = ? 
+    AND period = ?
+");
+
+if (!$stmt) {
+  header("Location: matrik.php?year=$year&period=$period&error=failed");
+  exit;
 }
 
 $stmt->bind_param("is", $id, $period);
-$ok = $stmt->execute();
-if ($ok === false) {
-  $stmt->close();
-  back("Terjadi kesalahan saat menghapus data.", "error", $year, $period);
-}
+$stmt->execute();
 
 $affected = $stmt->affected_rows;
 $stmt->close();
 
+// ============================
+// JIKA BERHASIL DIHAPUS
+// ============================
+
 if ($affected > 0) {
 
-  /* ===========================
+  /* ============================
      NOTIFIKASI
-  =========================== */
-  $title = "Data Penilaian Dihapus";
-  $message = "Data penilaian alternatif ID $id pada periode $period telah dihapus.";
+  ============================ */
 
-  // kirim ke admin
-  createNotification($db, $title, $message, "admin", null);
+  $title = "Evaluasi Dihapus";
 
-  // kirim ke quality control
-  createNotification($db, $title, $message, "quality_control", null);
+  $message = "
+Evaluasi telah dihapus:
+- Alternatif : <b>$alternativeName</b>
+- Periode    : <b>$period</b>
+  ";
 
-  back("Data berhasil dihapus untuk periode {$period}.", "success", $year, $period);
+  // ke admin
+  createNotification(
+    $db,
+    $title,
+    trim($message),
+    "admin",
+    null,
+    1
+  );
+
+  // ke quality control
+  createNotification(
+    $db,
+    $title,
+    trim($message),
+    "quality_control",
+    null,
+    1
+  );
+
+  header("Location: matrik.php?year=$year&period=$period&success=deleted");
+  exit;
 } else {
-  back("Tidak ada data yang ditemukan untuk dihapus pada periode {$period}.", "warning", $year, $period);
+
+  header("Location: matrik.php?year=$year&period=$period&error=not_found");
+  exit;
 }

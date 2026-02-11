@@ -28,25 +28,6 @@ require "include/nama-bulan.php";
     <?php require "layout/sidebar.php"; ?>
     <div id="main">
 
-      <?php
-      // tampilkan pesan jika ada ?msg=... pada URL
-      if (isset($_GET['msg'])) {
-        $msg = htmlspecialchars($_GET['msg']);
-        $type = isset($_GET['type']) ? htmlspecialchars($_GET['type']) : 'info';
-
-        $class = 'alert-info';
-        if ($type === 'success') $class = 'alert-success';
-        if ($type === 'error') $class = 'alert-danger';
-        if ($type === 'warning') $class = 'alert-warning';
-
-        echo "
-        <div class='alert {$class} alert-dismissible fade show' role='alert' style='margin:10px 0;'>
-          {$msg}
-          <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-        </div>";
-      }
-      ?>
-
       <header class="mb-3">
         <a href="#" class="burger-btn d-block d-xl-none">
           <i class="bi bi-justify fs-3"></i>

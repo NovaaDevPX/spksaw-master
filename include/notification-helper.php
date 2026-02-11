@@ -1,36 +1,48 @@
 <?php
-// include/notification_helper.php
+// include/notification-helper.php
 
 if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
 /**
- * Tambah notifikasi
+ * ============================
+ * TAMBAH NOTIFIKASI
+ * ============================
  */
-function createNotification($conn, $title, $message, $targetRole = null, $targetUserId = null)
-{
-  // pastikan user login
+function createNotification(
+  $conn,
+  $title,
+  $message,
+  $targetRole = null,
+  $targetUserId = null,
+  $isEvaluation = 0
+) {
+
   if (!isset($_SESSION['id_user']) || !isset($_SESSION['username'])) {
     return false;
   }
 
-  $createdBy = $_SESSION['id_user'];
+  $createdBy   = (int) $_SESSION['id_user'];
   $creatorName = $_SESSION['username'];
 
-  // tambahkan nama pembuat ke pesan
-  $message = $message . "\nDibuat oleh: " . $creatorName;
+  $fullMessage = $message . "\nDibuat oleh: " . $creatorName;
 
   $stmt = $conn->prepare("
         INSERT INTO saw_notifications 
-        (title, message, created_by, target_role, target_user_id)
-        VALUES (?, ?, ?, ?, ?)
+        (title, message, is_evaluation, created_by, target_role, target_user_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
     ");
 
+  if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+  }
+
   $stmt->bind_param(
-    "ssisi",
+    "ssiisi",
     $title,
-    $message,
+    $fullMessage,
+    $isEvaluation,
     $createdBy,
     $targetRole,
     $targetUserId
@@ -39,30 +51,61 @@ function createNotification($conn, $title, $message, $targetRole = null, $target
   return $stmt->execute();
 }
 
+
 /**
- * Ambil notifikasi user
+ * ==========================================================
+ * BASE QUERY (dipakai bersama biar tidak double logic)
+ * ==========================================================
  */
-function getUserNotifications($conn, $userId, $userRole)
+function baseNotificationQuery($isEvaluation)
 {
-  $stmt = $conn->prepare("
-        SELECT 
-            n.*,
-            u.username AS created_by_name,
-            IF(r.is_read IS NULL, 0, r.is_read) AS is_read
+  return "
         FROM saw_notifications n
         JOIN saw_users u 
             ON u.id_user = n.created_by
-        LEFT JOIN saw_notification_reads r 
-            ON n.id_notification = r.id_notification
-            AND r.id_user = ?
         WHERE
+            n.is_evaluation = ?
+        AND
+        (
             n.target_user_id = ?
-            OR n.target_user_id IS NULL
-            OR n.target_role = ?
-        ORDER BY n.created_at DESC
-    ");
+            OR
+            (
+                n.target_user_id IS NULL 
+                AND n.target_role = ?
+            )
+            OR
+            (
+                n.target_user_id IS NULL 
+                AND n.target_role IS NULL
+            )
+        )
+    ";
+}
 
-  $stmt->bind_param("iis", $userId, $userId, $userRole);
+
+/**
+ * ============================
+ * NOTIFIKASI BIASA (is_evaluation = 0)
+ * ============================
+ */
+function getUserNotifications($conn, $userId, $userRole, $limit = 5)
+{
+  $sql = "
+        SELECT 
+            n.id_notification,
+            n.title,
+            n.message,
+            n.created_at,
+            u.username AS created_by_name
+        "
+    . baseNotificationQuery(0) .
+    " ORDER BY n.created_at DESC
+          LIMIT ?";
+
+  $stmt = $conn->prepare($sql);
+  $isEvaluation = 0;
+
+  $stmt->bind_param("iisi", $isEvaluation, $userId, $userRole, $limit);
   $stmt->execute();
 
   return $stmt->get_result();
@@ -70,47 +113,75 @@ function getUserNotifications($conn, $userId, $userRole)
 
 
 /**
- * Hitung notifikasi belum dibaca
+ * ============================
+ * NOTIFIKASI EVALUASI (is_evaluation = 1)
+ * ============================
  */
-function countUnreadNotifications($conn, $userId, $userRole)
+function getEvaluationNotifications($conn, $userId, $userRole, $limit = 5)
 {
-  $stmt = $conn->prepare("
-        SELECT COUNT(*) as total
-        FROM saw_notifications n
-        LEFT JOIN saw_notification_reads r 
-            ON n.id_notification = r.id_notification
-            AND r.id_user = ?
-        WHERE
-            (
-                n.target_user_id = ?
-                OR n.target_user_id IS NULL
-                OR n.target_role = ?
-            )
-            AND (r.is_read IS NULL OR r.is_read = 0)
-    ");
+  $sql = "
+        SELECT 
+            n.id_notification,
+            n.title,
+            n.message,
+            n.created_at,
+            u.username AS created_by_name
+        "
+    . baseNotificationQuery(1) .
+    " ORDER BY n.created_at DESC
+          LIMIT ?";
 
-  $stmt->bind_param("iis", $userId, $userId, $userRole);
+  $stmt = $conn->prepare($sql);
+  $isEvaluation = 1;
+
+  $stmt->bind_param("iisi", $isEvaluation, $userId, $userRole, $limit);
   $stmt->execute();
-  $result = $stmt->get_result()->fetch_assoc();
 
+  return $stmt->get_result();
+}
+
+
+/**
+ * ============================
+ * HITUNG NOTIFIKASI BIASA
+ * ============================
+ */
+function countNotifications($conn, $userId, $userRole)
+{
+  $sql = "
+        SELECT COUNT(*) AS total
+        "
+    . baseNotificationQuery(0);
+
+  $stmt = $conn->prepare($sql);
+  $isEvaluation = 0;
+
+  $stmt->bind_param("iis", $isEvaluation, $userId, $userRole);
+  $stmt->execute();
+
+  $result = $stmt->get_result()->fetch_assoc();
   return $result['total'];
 }
 
 
 /**
- * Tandai notifikasi sebagai sudah dibaca
+ * ============================
+ * HITUNG NOTIFIKASI EVALUASI
+ * ============================
  */
-function markNotificationAsRead($conn, $notificationId, $userId)
+function countEvaluationNotifications($conn, $userId, $userRole)
 {
-  $stmt = $conn->prepare("
-        INSERT INTO saw_notification_reads 
-        (id_notification, id_user, is_read, read_at)
-        VALUES (?, ?, 1, NOW())
-        ON DUPLICATE KEY UPDATE
-            is_read = 1,
-            read_at = NOW()
-    ");
+  $sql = "
+        SELECT COUNT(*) AS total
+        "
+    . baseNotificationQuery(1);
 
-  $stmt->bind_param("ii", $notificationId, $userId);
-  return $stmt->execute();
+  $stmt = $conn->prepare($sql);
+  $isEvaluation = 1;
+
+  $stmt->bind_param("iis", $isEvaluation, $userId, $userRole);
+  $stmt->execute();
+
+  $result = $stmt->get_result()->fetch_assoc();
+  return $result['total'];
 }
